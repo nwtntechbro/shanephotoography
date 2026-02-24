@@ -1,74 +1,181 @@
 import { db } from './firebase-config.js';
-import { collection, query, getDocs, addDoc, orderBy, limit, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { 
+    collection, query, getDocs, addDoc, orderBy, limit, where, serverTimestamp, doc, getDoc 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// ==================== SITE SETTINGS LOADER ====================
+class SiteSettings {
+    constructor() {
+        this.settings = {};
+        this.loadSettings();
+    }
+
+    async loadSettings() {
+        try {
+            const settingsDoc = await getDoc(doc(db, 'settings', 'site'));
+            if (settingsDoc.exists()) {
+                this.settings = settingsDoc.data();
+                this.applyVideoSettings();
+                this.applyContactSettings();
+            }
+        } catch (error) {
+            console.error('Error loading settings:', error);
+        }
+    }
+
+    applyVideoSettings() {
+        const videoUrl = this.settings.heroVideoUrl;
+        const videoOpacity = this.settings.videoOpacity || 0.7;
+        
+        if (videoUrl) {
+            this.updateHeroVideo(videoUrl, videoOpacity);
+        }
+    }
+
+    updateHeroVideo(videoUrl, opacity) {
+        const heroSection = document.querySelector('.hero');
+        const existingVideo = document.getElementById('heroVideo');
+        
+        // Remove existing video if any
+        if (existingVideo) {
+            existingVideo.remove();
+        }
+
+        // Create new video element
+        const video = document.createElement('video');
+        video.id = 'heroVideo';
+        video.className = 'hero-video';
+        video.autoplay = true;
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.style.opacity = opacity;
+
+        // Create source element
+        const source = document.createElement('source');
+        source.src = videoUrl;
+        source.type = 'video/mp4';
+
+        video.appendChild(source);
+        
+        // Insert video at the beginning of hero section
+        heroSection.insertBefore(video, heroSection.firstChild);
+
+        // Handle video loading
+        video.addEventListener('loadeddata', () => {
+            console.log('Video loaded successfully from settings');
+            video.play().catch(e => console.log('Autoplay prevented:', e));
+        });
+
+        video.addEventListener('error', (e) => {
+            console.error('Video failed to load:', e);
+            // Fallback to gradient background
+            heroSection.style.background = 'linear-gradient(135deg, #0b0b0b 0%, #1a1a1a 100%)';
+        });
+    }
+
+    applyContactSettings() {
+        // Update contact information from settings
+        if (this.settings.contactPhone) {
+            const phoneLinks = document.querySelectorAll('a[href^="tel:"]');
+            phoneLinks.forEach(link => {
+                link.href = `tel:${this.settings.contactPhone.replace(/\s/g, '')}`;
+                link.textContent = this.settings.contactPhone;
+            });
+        }
+
+        if (this.settings.contactEmail) {
+            const emailLinks = document.querySelectorAll('a[href^="mailto:"]');
+            emailLinks.forEach(link => {
+                link.href = `mailto:${this.settings.contactEmail}`;
+                link.textContent = this.settings.contactEmail;
+            });
+        }
+
+        if (this.settings.contactWhatsapp) {
+            const whatsappLinks = document.querySelectorAll('a[href^="https://wa.me"]');
+            whatsappLinks.forEach(link => {
+                const number = this.settings.contactWhatsapp.replace(/\D/g, '');
+                link.href = `https://wa.me/${number}`;
+                link.textContent = this.settings.contactWhatsapp;
+            });
+        }
+
+        // Update social media links
+        if (this.settings.facebookUrl) {
+            const fbLinks = document.querySelectorAll('a[href*="facebook.com"]');
+            fbLinks.forEach(link => {
+                link.href = this.settings.facebookUrl;
+            });
+        }
+
+        if (this.settings.instagramUrl) {
+            const igLinks = document.querySelectorAll('a[href*="instagram.com"]');
+            igLinks.forEach(link => {
+                link.href = this.settings.instagramUrl;
+            });
+        }
+    }
+}
 
 // ==================== FACEBOOK FEED INTEGRATION ====================
 class FacebookFeed {
     constructor() {
         this.pageId = 'ShanePhotoography';
-        this.accessToken = 'YOUR_FACEBOOK_ACCESS_TOKEN'; // You'll need to generate this
         this.postsPerPage = 15;
+        this.feedContainer = document.getElementById('fbFeed');
+        this.loadFeed();
     }
 
     async loadFeed() {
         try {
-            // Using Facebook Graph API
-            const response = await fetch(`https://graph.facebook.com/v18.0/${this.pageId}/posts?fields=id,message,full_picture,created_time,permalink_url&limit=${this.postsPerPage}&access_token=${this.accessToken}`);
-            const data = await response.json();
+            // First try to load from Firebase (synced posts)
+            const q = query(collection(db, 'facebook_posts'), 
+                          where('hidden', '==', false), 
+                          orderBy('created_time', 'desc'), 
+                          limit(this.postsPerPage));
+            const snapshot = await getDocs(q);
             
-            if (data.data) {
-                this.renderFeed(data.data);
+            if (!snapshot.empty) {
+                this.renderFeedFromFirebase(snapshot.docs);
+            } else {
+                // If no posts in Firebase, try direct API
+                await this.loadFromAPI();
             }
         } catch (error) {
             console.error('Error loading Facebook feed:', error);
-            this.loadFallbackFeed();
+            this.feedContainer.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: var(--danger);">Error loading feed</p>';
         }
     }
 
-    renderFeed(posts) {
-        const feedContainer = document.getElementById('fbFeed');
-        feedContainer.innerHTML = posts.map(post => `
-            <a href="${post.permalink_url || '#'}" target="_blank" class="fb-card">
-                <div class="fb-image">
-                    ${post.full_picture ? 
-                        `<img src="${post.full_picture}" alt="Facebook post">` : 
-                        '<i class="fas fa-camera"></i>'
-                    }
-                </div>
-                <div class="fb-content">
-                    <p>${post.message ? post.message.substring(0, 100) + '...' : 'View this post'}</p>
-                    <span class="fb-date">${new Date(post.created_time).toLocaleDateString()}</span>
-                </div>
-            </a>
-        `).join('');
-    }
-
-    loadFallbackFeed() {
-        // Fallback to Firebase-stored posts if API fails
-        this.loadFromFirebase();
-    }
-
-    async loadFromFirebase() {
-        const feedContainer = document.getElementById('fbFeed');
-        const q = query(collection(db, 'facebook_posts'), orderBy('created_time', 'desc'), limit(15));
-        const snapshot = await getDocs(q);
-        
-        feedContainer.innerHTML = snapshot.docs.map(doc => {
+    renderFeedFromFirebase(posts) {
+        this.feedContainer.innerHTML = posts.map(doc => {
             const post = doc.data();
             return `
-                <a href="${post.permalink_url}" target="_blank" class="fb-card">
+                <a href="${post.permalink_url || '#'}" target="_blank" class="fb-card">
                     <div class="fb-image">
                         ${post.image_url ? 
-                            `<img src="${post.image_url}" alt="Facebook post">` : 
+                            `<img src="${post.image_url}" alt="Facebook post" loading="lazy">` : 
                             '<i class="fas fa-camera"></i>'
                         }
                     </div>
                     <div class="fb-content">
-                        <p>${post.message || 'View this post'}</p>
+                        <p>${post.message ? post.message.substring(0, 100) + '...' : 'View this post'}</p>
                         <span class="fb-date">${new Date(post.created_time).toLocaleDateString()}</span>
                     </div>
                 </a>
             `;
         }).join('');
+    }
+
+    async loadFromAPI() {
+        try {
+            // You would need to implement Facebook API with access token
+            // This is a placeholder - you should use the synced posts from Firebase instead
+            this.feedContainer.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">Connect Facebook in admin panel</p>';
+        } catch (error) {
+            console.error('API error:', error);
+        }
     }
 }
 
@@ -76,26 +183,37 @@ class FacebookFeed {
 class PackagesManager {
     constructor() {
         this.container = document.getElementById('packagesContainer');
+        this.loadPackages();
     }
 
     async loadPackages() {
-        const q = query(collection(db, 'packages'), where('active', '==', true));
-        const snapshot = await getDocs(q);
-        
-        this.container.innerHTML = snapshot.docs.map(doc => {
-            const pkg = doc.data();
-            return `
-                <div class="package-card">
-                    <div class="package-badge">${pkg.category || 'Popular'}</div>
-                    <h3>${pkg.name}</h3>
-                    <div class="package-price">LKR ${pkg.price.toLocaleString()}</div>
-                    <ul class="package-features">
-                        ${pkg.features.map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('')}
-                    </ul>
-                    <button class="btn-primary" onclick="selectPackage('${doc.id}', '${pkg.name}')">Select Package</button>
-                </div>
-            `;
-        }).join('');
+        try {
+            const q = query(collection(db, 'packages'), where('active', '==', true));
+            const snapshot = await getDocs(q);
+            
+            if (snapshot.empty) {
+                this.container.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">No packages available</p>';
+                return;
+            }
+
+            this.container.innerHTML = snapshot.docs.map(doc => {
+                const pkg = doc.data();
+                return `
+                    <div class="package-card">
+                        ${pkg.popular ? '<div class="package-badge">Popular</div>' : ''}
+                        <h3>${pkg.name}</h3>
+                        <div class="package-price">LKR ${pkg.price?.toLocaleString() || '0'}</div>
+                        <ul class="package-features">
+                            ${pkg.features ? pkg.features.map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('') : ''}
+                        </ul>
+                        <button class="btn-primary" onclick="selectPackage('${doc.id}', '${pkg.name}')">Select Package</button>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Error loading packages:', error);
+            this.container.innerHTML = '<p style="text-align: center; color: var(--danger);">Error loading packages</p>';
+        }
     }
 }
 
@@ -106,26 +224,44 @@ class BookingCalendar {
         this.selectedDate = null;
         this.bookedSlots = [];
         this.availableSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
+        this.initialize();
     }
 
     async initialize() {
+        await this.loadSettings();
         await this.loadBookedSlots();
         this.renderCalendar();
         this.attachEventListeners();
+    }
+
+    async loadSettings() {
+        try {
+            const settingsDoc = await getDoc(doc(db, 'settings', 'site'));
+            if (settingsDoc.exists() && settingsDoc.data().timeSlots) {
+                this.availableSlots = settingsDoc.data().timeSlots;
+            }
+        } catch (error) {
+            console.error('Error loading settings:', error);
+        }
     }
 
     async loadBookedSlots() {
         const year = this.currentDate.getFullYear();
         const month = this.currentDate.getMonth() + 1;
         
-        const q = query(
-            collection(db, 'bookings'),
-            where('date', '>=', `${year}-${month.toString().padStart(2,'0')}-01`),
-            where('date', '<=', `${year}-${month.toString().padStart(2,'0')}-31`)
-        );
-        
-        const snapshot = await getDocs(q);
-        this.bookedSlots = snapshot.docs.map(doc => doc.data());
+        try {
+            const q = query(
+                collection(db, 'bookings'),
+                where('date', '>=', `${year}-${month.toString().padStart(2,'0')}-01`),
+                where('date', '<=', `${year}-${month.toString().padStart(2,'0')}-31`),
+                where('status', 'in', ['pending', 'confirmed'])
+            );
+            
+            const snapshot = await getDocs(q);
+            this.bookedSlots = snapshot.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Error loading booked slots:', error);
+        }
     }
 
     renderCalendar() {
@@ -149,16 +285,19 @@ class BookingCalendar {
         }
 
         // Days of month
+        const today = new Date().setHours(0,0,0,0);
+        
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
+            const dateObj = new Date(year, month, day);
             const isBooked = this.bookedSlots.some(booking => booking.date === dateStr);
-            const isPast = new Date(year, month, day) < new Date().setHours(0,0,0,0);
+            const isPast = dateObj < today;
+            const isAvailable = !isBooked && !isPast;
             
             calendarHTML += `
-                <div class="calendar-day ${isPast ? 'past' : ''} ${isBooked ? 'booked' : 'available'}" 
+                <div class="calendar-day ${isPast ? 'past' : ''} ${isBooked ? 'booked' : ''} ${isAvailable ? 'available' : ''}" 
                      data-date="${dateStr}">
                     ${day}
-                    ${isBooked ? '<span class="badge">Booked</span>' : ''}
                 </div>
             `;
         }
@@ -193,7 +332,6 @@ class BookingCalendar {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
         
-        // Load available time slots
         this.loadTimeSlots(date);
         formWrapper.style.display = 'block';
         formWrapper.scrollIntoView({ behavior: 'smooth' });
@@ -203,20 +341,24 @@ class BookingCalendar {
         const timeSlotSelect = document.getElementById('timeSlot');
         timeSlotSelect.innerHTML = '<option value="">Select time</option>';
         
-        // Get booked slots for this date
-        const q = query(collection(db, 'bookings'), where('date', '==', date));
-        const snapshot = await getDocs(q);
-        const bookedTimes = snapshot.docs.map(doc => doc.data().time);
-        
-        // Filter available slots
-        const available = this.availableSlots.filter(slot => !bookedTimes.includes(slot));
-        
-        available.forEach(slot => {
-            const option = document.createElement('option');
-            option.value = slot;
-            option.textContent = slot;
-            timeSlotSelect.appendChild(option);
-        });
+        try {
+            // Get booked slots for this date
+            const q = query(collection(db, 'bookings'), where('date', '==', date));
+            const snapshot = await getDocs(q);
+            const bookedTimes = snapshot.docs.map(doc => doc.data().time);
+            
+            // Filter available slots
+            const available = this.availableSlots.filter(slot => !bookedTimes.includes(slot));
+            
+            available.forEach(slot => {
+                const option = document.createElement('option');
+                option.value = slot;
+                option.textContent = slot;
+                timeSlotSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading time slots:', error);
+        }
     }
 }
 
@@ -224,27 +366,38 @@ class BookingCalendar {
 class ReviewsManager {
     constructor() {
         this.container = document.getElementById('reviewsContainer');
+        this.loadReviews();
     }
 
     async loadReviews() {
-        const q = query(collection(db, 'reviews'), where('approved', '==', true), orderBy('createdAt', 'desc'), limit(6));
-        const snapshot = await getDocs(q);
-        
-        this.container.innerHTML = snapshot.docs.map(doc => {
-            const review = doc.data();
-            return `
-                <div class="review-card">
-                    <div class="review-stars">
-                        ${Array(review.rating).fill('<i class="fas fa-star"></i>').join('')}
+        try {
+            const q = query(collection(db, 'reviews'), where('approved', '==', true), orderBy('createdAt', 'desc'), limit(6));
+            const snapshot = await getDocs(q);
+            
+            if (snapshot.empty) {
+                this.container.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">No reviews yet</p>';
+                return;
+            }
+
+            this.container.innerHTML = snapshot.docs.map(doc => {
+                const review = doc.data();
+                return `
+                    <div class="review-card">
+                        <div class="review-stars">
+                            ${Array(review.rating).fill('<i class="fas fa-star"></i>').join('')}
+                        </div>
+                        <p class="review-text">"${review.text}"</p>
+                        <div class="review-author">
+                            <strong>${review.name}</strong>
+                            <span>${review.eventType || 'Client'}</span>
+                        </div>
                     </div>
-                    <p class="review-text">"${review.text}"</p>
-                    <div class="review-author">
-                        <strong>${review.name}</strong>
-                        <span>${review.eventType || 'Client'}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+            this.container.innerHTML = '<p style="text-align: center; color: var(--danger);">Error loading reviews</p>';
+        }
     }
 }
 
@@ -285,6 +438,7 @@ class BookingHandler {
     constructor() {
         this.form = document.getElementById('bookingForm');
         this.setupListener();
+        this.loadPackages();
     }
 
     setupListener() {
@@ -319,49 +473,77 @@ class BookingHandler {
 
     async loadPackages() {
         const select = document.getElementById('packageSelect');
-        const q = query(collection(db, 'packages'), where('active', '==', true));
-        const snapshot = await getDocs(q);
-        
-        select.innerHTML = '<option value="">Choose package</option>';
-        snapshot.docs.forEach(doc => {
-            const pkg = doc.data();
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.textContent = `${pkg.name} - LKR ${pkg.price.toLocaleString()}`;
-            select.appendChild(option);
-        });
+        try {
+            const q = query(collection(db, 'packages'), where('active', '==', true));
+            const snapshot = await getDocs(q);
+            
+            select.innerHTML = '<option value="">Choose package</option>';
+            snapshot.docs.forEach(doc => {
+                const pkg = doc.data();
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.textContent = `${pkg.name} - LKR ${pkg.price?.toLocaleString() || '0'}`;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading packages:', error);
+        }
     }
 }
 
-// ==================== INITIALIZATION ====================
+// ==================== NAVIGATION HANDLER ====================
+class NavigationHandler {
+    constructor() {
+        this.setupSmoothScroll();
+        this.setupMobileMenu();
+    }
+
+    setupSmoothScroll() {
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    }
+
+    setupMobileMenu() {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navMenu = document.querySelector('.nav-menu');
+        
+        if (menuToggle && navMenu) {
+            menuToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
+    }
+}
+
+// ==================== GLOBAL FUNCTIONS ====================
 window.selectPackage = (packageId, packageName) => {
     document.getElementById('packageSelect').value = packageId;
     document.getElementById('book').scrollIntoView({ behavior: 'smooth' });
 };
 
-// Initialize everything when DOM is loaded
+// ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', async () => {
-    // Load Facebook feed
+    // Load settings first (this will update the video)
+    const settings = new SiteSettings();
+    
+    // Initialize all components
     const fbFeed = new FacebookFeed();
-    fbFeed.loadFeed();
-
-    // Load packages
     const packages = new PackagesManager();
-    await packages.loadPackages();
-
-    // Initialize calendar
     const calendar = new BookingCalendar();
-    await calendar.initialize();
-
-    // Load reviews
     const reviews = new ReviewsManager();
-    await reviews.loadReviews();
-
-    // Initialize forms
     const inquiryHandler = new InquiryHandler();
     const bookingHandler = new BookingHandler();
-    await bookingHandler.loadPackages();
+    const navigation = new NavigationHandler();
 
     // Refresh feed every 30 minutes
-    setInterval(() => fbFeed.loadFeed(), 30 * 60 * 1000);
+    setInterval(() => {
+        new FacebookFeed().loadFeed();
+    }, 30 * 60 * 1000);
 });
