@@ -121,60 +121,47 @@ class SiteSettings {
 // ==================== FACEBOOK FEED INTEGRATION ====================
 class FacebookFeed {
     constructor() {
-        this.pageId = 'ShanePhotoography';
-        this.postsPerPage = 15;
+        this.pageUrl = 'https://www.facebook.com/ShanePhotoography/';
         this.feedContainer = document.getElementById('fbFeed');
-        this.loadFeed();
+        this.initFeed();
     }
 
-    async loadFeed() {
-        try {
-            // First try to load from Firebase (synced posts)
-            const q = query(collection(db, 'facebook_posts'), 
-                          where('hidden', '==', false), 
-                          orderBy('created_time', 'desc'), 
-                          limit(this.postsPerPage));
-            const snapshot = await getDocs(q);
-            
-            if (!snapshot.empty) {
-                this.renderFeedFromFirebase(snapshot.docs);
-            } else {
-                // If no posts in Firebase, try direct API
-                await this.loadFromAPI();
-            }
-        } catch (error) {
-            console.error('Error loading Facebook feed:', error);
-            this.feedContainer.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: var(--danger);">Error loading feed</p>';
-        }
+    initFeed() {
+        // Create the Facebook embed using iframe method (most reliable)
+        this.createIframeFeed();
+        
+        // Also load SDK for future use
+        this.loadFacebookSDK();
     }
 
-    renderFeedFromFirebase(posts) {
-        this.feedContainer.innerHTML = posts.map(doc => {
-            const post = doc.data();
-            return `
-                <a href="${post.permalink_url || '#'}" target="_blank" class="fb-card">
-                    <div class="fb-image">
-                        ${post.image_url ? 
-                            `<img src="${post.image_url}" alt="Facebook post" loading="lazy">` : 
-                            '<i class="fas fa-camera"></i>'
-                        }
-                    </div>
-                    <div class="fb-content">
-                        <p>${post.message ? post.message.substring(0, 100) + '...' : 'View this post'}</p>
-                        <span class="fb-date">${new Date(post.created_time).toLocaleDateString()}</span>
-                    </div>
-                </a>
-            `;
-        }).join('');
+    createIframeFeed() {
+        // Facebook Page Plugin URL format
+        const encodedUrl = encodeURIComponent(this.pageUrl);
+        const iframeSrc = `https://www.facebook.com/plugins/page.php?href=${encodedUrl}&tabs=timeline&width=500&height=800&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId`;
+        
+        this.feedContainer.innerHTML = `
+            <div style="display: flex; justify-content: center; width: 100%;">
+                <iframe 
+                    src="${iframeSrc}" 
+                    width="100%" 
+                    height="800" 
+                    style="border:none;overflow:hidden; border-radius: 20px; max-width: 500px; background: #1a1a1a;" 
+                    scrolling="no" 
+                    frameborder="0" 
+                    allowfullscreen="true" 
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+                </iframe>
+            </div>
+        `;
     }
 
-    async loadFromAPI() {
-        try {
-            // You would need to implement Facebook API with access token
-            // This is a placeholder - you should use the synced posts from Firebase instead
-            this.feedContainer.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">Connect Facebook in admin panel</p>';
-        } catch (error) {
-            console.error('API error:', error);
+    loadFacebookSDK() {
+        // Load SDK for potential future interactive features
+        if (!document.getElementById('facebook-jssdk')) {
+            const script = document.createElement('script');
+            script.id = 'facebook-jssdk';
+            script.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v18.0';
+            document.body.appendChild(script);
         }
     }
 }
