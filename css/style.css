@@ -238,10 +238,29 @@ body {
 
 /* Facebook Feed Grid */
 .fb-feed-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
-    margin-bottom: 3rem;
+    display: flex;
+    justify-content: center;
+    min-height: 600px;
+    margin: 2rem 0;
+}
+.fb-page,
+.fb-page iframe,
+.fb-page span,
+.fb-page .fb_iframe_widget {
+    width: 100% !important;
+    max-width: 500px !important;
+    margin: 0 auto;
+    border-radius: 20px !important;
+    overflow: hidden;
+}
+
+/* For mobile responsiveness */
+@media (max-width: 600px) {
+    .fb-page,
+    .fb-page iframe {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 }
 
 .fb-card {
