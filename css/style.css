@@ -1,3 +1,4 @@
+/* ==================== ROOT VARIABLES ==================== */
 :root {
     --primary: #f5b342;
     --primary-dark: #d18c1f;
@@ -7,8 +8,15 @@
     --gray: #b0b0b0;
     --glass-bg: rgba(10, 10, 10, 0.85);
     --glass-border: rgba(255, 255, 255, 0.08);
+    --header-height: 80px;
+    --transition: all 0.3s ease;
+    --border-radius: 50px;
+    --border-radius-lg: 30px;
+    --border-radius-md: 20px;
+    --border-radius-sm: 12px;
 }
 
+/* ==================== GLOBAL STYLES ==================== */
 * {
     margin: 0;
     padding: 0;
@@ -23,7 +31,82 @@ body {
     overflow-x: hidden;
 }
 
-/* Navigation */
+/* ==================== TYPOGRAPHY ==================== */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.section-title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    position: relative;
+    display: inline-block;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: var(--primary);
+}
+
+.section-subtitle {
+    color: var(--gray);
+    font-size: 1.2rem;
+}
+
+/* ==================== BUTTONS ==================== */
+.btn-primary, .btn-outline {
+    padding: 0.8rem 2rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    cursor: pointer;
+    display: inline-block;
+    border: 2px solid transparent;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--dark);
+}
+
+.btn-primary:hover {
+    background: transparent;
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: var(--dark);
+}
+
+.btn-large {
+    padding: 1rem 3rem;
+    font-size: 1.1rem;
+}
+
+.btn-block {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+}
+
+/* ==================== NAVIGATION ==================== */
 .navbar {
     position: fixed;
     top: 0;
@@ -87,53 +170,37 @@ body {
     width: 100%;
 }
 
-/* Buttons */
-.btn-primary {
-    background: var(--primary);
-    color: var(--dark);
-    padding: 0.8rem 2rem;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s;
-    border: 2px solid transparent;
+.nav-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--light);
+    font-size: 1.8rem;
     cursor: pointer;
-    display: inline-block;
+    padding: 0.5rem;
+    transition: color 0.3s;
 }
 
-.btn-primary:hover {
-    background: transparent;
+.menu-toggle:hover {
     color: var(--primary);
-    border-color: var(--primary);
 }
 
-.btn-outline {
-    background: transparent;
-    color: var(--primary);
-    padding: 0.8rem 2rem;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: 600;
-    border: 2px solid var(--primary);
-    transition: all 0.3s;
-    cursor: pointer;
-    display: inline-block;
-}
-
-.btn-outline:hover {
-    background: var(--primary);
-    color: var(--dark);
-}
-
-/* Hero Section */
+/* ==================== HERO SECTION ==================== */
 .hero {
     position: relative;
     height: 100vh;
-    min-height: 600px; /* Minimum height for mobile */
+    min-height: 600px;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    background: linear-gradient(135deg, var(--dark) 0%, #050505 100%);
 }
 
 .hero-video {
@@ -191,80 +258,7 @@ body {
     flex-wrap: wrap;
 }
 
-.btn-large {
-    padding: 1rem 3rem;
-    font-size: 1.1rem;
-}
-/* Mobile-specific video fixes */
-@media (max-width: 768px) {
-    .hero {
-        min-height: 100vh;
-        height: -webkit-fill-available; /* Fix for mobile viewport height */
-    }
-    
-    .hero-video {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transform: none; /* Reset transform for mobile */
-    }
-    
-    .hero-content {
-        padding: 0 1rem;
-        width: 100%;
-    }
-    
-    .hero-title {
-        font-size: 2.5rem;
-    }
-    
-    .hero-subtitle {
-        font-size: 1rem;
-    }
-}
-
-
-/* Back to Top Button */
-.back-to-top {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    background: var(--primary);
-    color: var(--dark);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    z-index: 999;
-    box-shadow: 0 5px 20px rgba(245, 179, 66, 0.3);
-    border: 2px solid transparent;
-}
-
-.back-to-top.show {
-    opacity: 1;
-    visibility: visible;
-}
-
-.back-to-top:hover {
-    background: transparent;
-    color: var(--primary);
-    border-color: var(--primary);
-    transform: translateY(-5px);
-}
-
-
-/* Sections */
+/* ==================== SECTIONS ==================== */
 .section {
     padding: 6rem 2rem;
 }
@@ -283,37 +277,14 @@ body {
     margin-bottom: 4rem;
 }
 
-.section-title {
-    font-size: clamp(2rem, 5vw, 3rem);
-    font-weight: 700;
-    margin-bottom: 1rem;
-    position: relative;
-    display: inline-block;
-}
-
-.section-title::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 3px;
-    background: var(--primary);
-}
-
-.section-subtitle {
-    color: var(--gray);
-    font-size: 1.2rem;
-}
-
-/* Facebook Feed Grid */
+/* ==================== FACEBOOK FEED ==================== */
 .fb-feed-grid {
     display: flex;
     justify-content: center;
     min-height: 600px;
     margin: 2rem 0;
 }
+
 .fb-page,
 .fb-page iframe,
 .fb-page span,
@@ -321,26 +292,17 @@ body {
     width: 100% !important;
     max-width: 500px !important;
     margin: 0 auto;
-    border-radius: 20px !important;
+    border-radius: var(--border-radius-md) !important;
     overflow: hidden;
-}
-
-/* For mobile responsiveness */
-@media (max-width: 600px) {
-    .fb-page,
-    .fb-page iframe {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
 }
 
 .fb-card {
     background: var(--dark-light);
-    border-radius: 20px;
+    border-radius: var(--border-radius-md);
     overflow: hidden;
     text-decoration: none;
     color: var(--light);
-    transition: transform 0.3s, box-shadow 0.3s;
+    transition: var(--transition);
     border: 1px solid var(--glass-border);
 }
 
@@ -380,7 +342,7 @@ body {
     display: block;
 }
 
-/* Packages Grid */
+/* ==================== PACKAGES ==================== */
 .packages-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -390,11 +352,11 @@ body {
 
 .package-card {
     background: linear-gradient(145deg, #1a1a1a, #151515);
-    border-radius: 30px;
+    border-radius: var(--border-radius-lg);
     padding: 2.5rem 2rem;
     position: relative;
     border: 1px solid #2a2a2a;
-    transition: all 0.3s;
+    transition: var(--transition);
 }
 
 .package-card:hover {
@@ -410,7 +372,7 @@ body {
     background: var(--primary);
     color: var(--dark);
     padding: 0.3rem 1rem;
-    border-radius: 30px;
+    border-radius: var(--border-radius-lg);
     font-weight: 600;
     font-size: 0.9rem;
 }
@@ -443,7 +405,7 @@ body {
     color: var(--primary);
 }
 
-/* Calendar */
+/* ==================== BOOKING CALENDAR ==================== */
 .booking-container {
     background: #1a1a1a;
     border-radius: 40px;
@@ -466,7 +428,7 @@ body {
     height: 40px;
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: var(--transition);
 }
 
 .calendar-nav:hover {
@@ -497,14 +459,12 @@ body {
 .calendar-day {
     aspect-ratio: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     background: #252525;
-    border-radius: 12px;
+    border-radius: var(--border-radius-sm);
     cursor: pointer;
-    transition: all 0.3s;
-    position: relative;
+    transition: var(--transition);
     font-weight: 500;
 }
 
@@ -526,17 +486,11 @@ body {
     cursor: not-allowed;
 }
 
-.badge {
-    font-size: 0.6rem;
-    position: absolute;
-    bottom: 4px;
-}
-
-/* Forms */
+/* ==================== FORMS ==================== */
 .booking-form-wrapper,
 .inquiry-form-wrapper {
     background: #1f1f1f;
-    border-radius: 30px;
+    border-radius: var(--border-radius-lg);
     padding: 2.5rem;
     margin-top: 2rem;
     border: 1px solid #2a2a2a;
@@ -569,7 +523,7 @@ body {
     border-radius: 15px;
     color: var(--light);
     font-size: 1rem;
-    transition: all 0.3s;
+    transition: var(--transition);
 }
 
 .form-group input:focus,
@@ -580,13 +534,7 @@ body {
     background: #252525;
 }
 
-.btn-block {
-    width: 100%;
-    padding: 1rem;
-    font-size: 1.1rem;
-}
-
-/* Contact Section */
+/* ==================== CONTACT SECTION ==================== */
 .contact-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -605,7 +553,7 @@ body {
     border-radius: 25px;
     text-align: center;
     border: 1px solid #2a2a2a;
-    transition: all 0.3s;
+    transition: var(--transition);
 }
 
 .contact-card:hover {
@@ -633,7 +581,7 @@ body {
     color: var(--primary);
 }
 
-/* Reviews */
+/* ==================== REVIEWS ==================== */
 .reviews-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -675,7 +623,43 @@ body {
     font-size: 0.9rem;
 }
 
-/* Footer */
+/* ==================== BACK TO TOP BUTTON ==================== */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: var(--primary);
+    color: var(--dark);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+    z-index: 999;
+    box-shadow: 0 5px 20px rgba(245, 179, 66, 0.3);
+    border: 2px solid transparent;
+}
+
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-top:hover {
+    background: transparent;
+    color: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-5px);
+}
+
+/* ==================== FOOTER ==================== */
 .footer {
     background: #0a0a0a;
     padding: 4rem 2rem 1rem;
@@ -740,7 +724,9 @@ body {
     color: var(--gray);
 }
 
-/* Responsive */
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Tablet & Mobile Navigation */
 @media (max-width: 968px) {
     .menu-toggle {
         display: block;
@@ -748,11 +734,11 @@ body {
     
     .nav-menu {
         position: fixed;
-        top: 80px;
+        top: var(--header-height);
         left: -100%;
         width: 80%;
         max-width: 400px;
-        height: calc(100vh - 80px);
+        height: calc(100vh - var(--header-height));
         background: var(--glass-bg);
         backdrop-filter: blur(12px);
         flex-direction: column;
@@ -784,12 +770,6 @@ body {
         color: var(--primary);
     }
     
-    .nav-buttons {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-    
     .contact-container {
         grid-template-columns: 1fr;
     }
@@ -803,20 +783,73 @@ body {
         padding: 1.5rem;
     }
 }
-/* Small mobile devices */
+
+/* Mobile Specific */
+@media (max-width: 768px) {
+    :root {
+        --header-height: 70px;
+    }
+    
+    .hero {
+        min-height: 100vh;
+        height: -webkit-fill-available;
+    }
+    
+    .hero-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: none;
+    }
+    
+    .hero-content {
+        padding: 0 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .section {
+        padding: 4rem 1rem;
+    }
+    
+    .calendar-day {
+        font-size: 0.9rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .contact-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .booking-container {
+        padding: 1.5rem;
+    }
+}
+
+/* Small Mobile Devices */
 @media (max-width: 480px) {
     .nav-menu {
         width: 100%;
         max-width: 100%;
     }
     
-    .btn-primary, .btn-outline {
+    .btn-primary, 
+    .btn-outline {
         padding: 0.6rem 1.2rem;
         font-size: 0.9rem;
-    }
-    
-    .section {
-        padding: 4rem 1rem;
     }
     
     .contact-card {
@@ -830,15 +863,7 @@ body {
         height: 45px;
         font-size: 1.2rem;
     }
-}
-
-/* Fix for mobile navigation when menu is open */
-body.menu-open {
-    overflow: hidden;
-}
-
-/* Facebook Feed Mobile Fix */
-@media (max-width: 600px) {
+    
     .fb-feed-grid {
         min-height: 500px;
     }
@@ -849,30 +874,7 @@ body.menu-open {
     }
 }
 
-/* Calendar Mobile Fix */
-@media (max-width: 768px) {
-    .booking-container {
-        padding: 1.5rem;
-    }
-    
-    .calendar-day {
-        font-size: 0.9rem;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-      .contact-info {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Touch-friendly improvements */
+/* Touch Device Optimizations */
 @media (hover: none) and (pointer: coarse) {
     .calendar-day.available:hover {
         background: #252525;
@@ -886,7 +888,7 @@ body.menu-open {
     }
 }
 
-/* Fix for notched phones */
+/* Notched Phone Support */
 @supports (padding: max(0px)) {
     .nav-menu {
         padding-left: max(2rem, env(safe-area-inset-left));
@@ -897,4 +899,21 @@ body.menu-open {
         bottom: max(30px, env(safe-area-inset-bottom));
         right: max(30px, env(safe-area-inset-right));
     }
+    
+    .hero {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* iOS Height Fix */
+@supports (-webkit-touch-callout: none) {
+    .hero {
+        height: -webkit-fill-available;
+    }
+}
+
+/* Body Menu Open State */
+body.menu-open {
+    overflow: hidden;
 }
