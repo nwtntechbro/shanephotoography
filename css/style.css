@@ -129,6 +129,7 @@ body {
 .hero {
     position: relative;
     height: 100vh;
+    min-height: 600px; /* Minimum height for mobile */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -137,13 +138,15 @@ body {
 
 .hero-video {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translateX(-50%) translateY(-50%);
     object-fit: cover;
     z-index: 0;
-    opacity: 0.6;
 }
 
 .hero-overlay {
@@ -192,6 +195,74 @@ body {
     padding: 1rem 3rem;
     font-size: 1.1rem;
 }
+/* Mobile-specific video fixes */
+@media (max-width: 768px) {
+    .hero {
+        min-height: 100vh;
+        height: -webkit-fill-available; /* Fix for mobile viewport height */
+    }
+    
+    .hero-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: none; /* Reset transform for mobile */
+    }
+    
+    .hero-content {
+        padding: 0 1rem;
+        width: 100%;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+}
+
+
+/* Back to Top Button */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: var(--primary);
+    color: var(--dark);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 999;
+    box-shadow: 0 5px 20px rgba(245, 179, 66, 0.3);
+    border: 2px solid transparent;
+}
+
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-top:hover {
+    background: transparent;
+    color: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-5px);
+}
+
 
 /* Sections */
 .section {
@@ -671,12 +742,52 @@ body {
 
 /* Responsive */
 @media (max-width: 968px) {
+    .menu-toggle {
+        display: block;
+    }
+    
     .nav-menu {
+        position: fixed;
+        top: 80px;
+        left: -100%;
+        width: 80%;
+        max-width: 400px;
+        height: calc(100vh - 80px);
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        flex-direction: column;
+        padding: 2rem;
+        gap: 1rem;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        border-right: 1px solid var(--glass-border);
+    }
+    
+    .nav-menu.active {
+        left: 0;
+    }
+    
+    .nav-link {
+        font-size: 1.2rem;
+        padding: 1rem;
+        width: 100%;
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .nav-link::after {
         display: none;
     }
     
-    .menu-toggle {
-        display: block;
+    .nav-link:hover {
+        background: rgba(245, 179, 66, 0.1);
+        color: var(--primary);
+    }
+    
+    .nav-buttons {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
     
     .contact-container {
@@ -692,13 +803,98 @@ body {
         padding: 1.5rem;
     }
 }
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .nav-menu {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .btn-primary, .btn-outline {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+    
+    .section {
+        padding: 4rem 1rem;
+    }
+    
+    .contact-card {
+        padding: 1.5rem;
+    }
+    
+    .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+}
 
+/* Fix for mobile navigation when menu is open */
+body.menu-open {
+    overflow: hidden;
+}
+
+/* Facebook Feed Mobile Fix */
+@media (max-width: 600px) {
+    .fb-feed-grid {
+        min-height: 500px;
+    }
+    
+    .fb-page,
+    .fb-page iframe {
+        height: 500px !important;
+    }
+}
+
+/* Calendar Mobile Fix */
 @media (max-width: 768px) {
-    .contact-info {
+    .booking-container {
+        padding: 1.5rem;
+    }
+    
+    .calendar-day {
+        font-size: 0.9rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+      .contact-info {
         grid-template-columns: 1fr;
     }
     
     .form-row {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .calendar-day.available:hover {
+        background: #252525;
+        color: var(--light);
+        transform: none;
+    }
+    
+    .btn-primary:active,
+    .btn-outline:active {
+        transform: scale(0.98);
+    }
+}
+
+/* Fix for notched phones */
+@supports (padding: max(0px)) {
+    .nav-menu {
+        padding-left: max(2rem, env(safe-area-inset-left));
+        padding-right: max(2rem, env(safe-area-inset-right));
+    }
+    
+    .back-to-top {
+        bottom: max(30px, env(safe-area-inset-bottom));
+        right: max(30px, env(safe-area-inset-right));
     }
 }
