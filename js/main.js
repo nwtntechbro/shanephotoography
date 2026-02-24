@@ -36,12 +36,10 @@ class SiteSettings {
         const heroSection = document.querySelector('.hero');
         const existingVideo = document.getElementById('heroVideo');
         
-        // Remove existing video if any
         if (existingVideo) {
             existingVideo.remove();
         }
 
-        // Create new video element
         const video = document.createElement('video');
         video.id = 'heroVideo';
         video.className = 'hero-video';
@@ -51,31 +49,24 @@ class SiteSettings {
         video.playsInline = true;
         video.style.opacity = opacity;
 
-        // Create source element
         const source = document.createElement('source');
         source.src = videoUrl;
         source.type = 'video/mp4';
 
         video.appendChild(source);
-        
-        // Insert video at the beginning of hero section
         heroSection.insertBefore(video, heroSection.firstChild);
 
-        // Handle video loading
         video.addEventListener('loadeddata', () => {
-            console.log('Video loaded successfully from settings');
             video.play().catch(e => console.log('Autoplay prevented:', e));
         });
 
         video.addEventListener('error', (e) => {
             console.error('Video failed to load:', e);
-            // Fallback to gradient background
             heroSection.style.background = 'linear-gradient(135deg, #0b0b0b 0%, #1a1a1a 100%)';
         });
     }
 
     applyContactSettings() {
-        // Update contact information from settings
         if (this.settings.contactPhone) {
             const phoneLinks = document.querySelectorAll('a[href^="tel:"]');
             phoneLinks.forEach(link => {
@@ -100,25 +91,10 @@ class SiteSettings {
                 link.textContent = this.settings.contactWhatsapp;
             });
         }
-
-        // Update social media links
-        if (this.settings.facebookUrl) {
-            const fbLinks = document.querySelectorAll('a[href*="facebook.com"]');
-            fbLinks.forEach(link => {
-                link.href = this.settings.facebookUrl;
-            });
-        }
-
-        if (this.settings.instagramUrl) {
-            const igLinks = document.querySelectorAll('a[href*="instagram.com"]');
-            igLinks.forEach(link => {
-                link.href = this.settings.instagramUrl;
-            });
-        }
     }
 }
 
-// ==================== FACEBOOK FEED INTEGRATION ====================
+// ==================== FACEBOOK FEED (Official Page Plugin) ====================
 class FacebookFeed {
     constructor() {
         this.pageUrl = 'https://www.facebook.com/ShanePhotoography/';
@@ -127,15 +103,11 @@ class FacebookFeed {
     }
 
     initFeed() {
-        // Create the Facebook embed using iframe method (most reliable)
         this.createIframeFeed();
-        
-        // Also load SDK for future use
         this.loadFacebookSDK();
     }
 
     createIframeFeed() {
-        // Facebook Page Plugin URL format
         const encodedUrl = encodeURIComponent(this.pageUrl);
         const iframeSrc = `https://www.facebook.com/plugins/page.php?href=${encodedUrl}&tabs=timeline&width=500&height=800&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId`;
         
@@ -156,7 +128,6 @@ class FacebookFeed {
     }
 
     loadFacebookSDK() {
-        // Load SDK for potential future interactive features
         if (!document.getElementById('facebook-jssdk')) {
             const script = document.createElement('script');
             script.id = 'facebook-jssdk';
@@ -266,12 +237,10 @@ class BookingCalendar {
         });
         calendarHTML += '</div><div class="calendar-days">';
 
-        // Empty cells for days before month start
         for (let i = 0; i < firstDay; i++) {
             calendarHTML += '<div class="calendar-day empty"></div>';
         }
 
-        // Days of month
         const today = new Date().setHours(0,0,0,0);
         
         for (let day = 1; day <= daysInMonth; day++) {
@@ -296,8 +265,16 @@ class BookingCalendar {
     attachEventListeners() {
         document.querySelectorAll('.calendar-day.available').forEach(day => {
             day.addEventListener('click', (e) => {
-                this.selectedDate = e.currentTarget.dataset.date;
-                this.showBookingForm(this.selectedDate);
+                if (window.innerWidth <= 768) {
+                    // Slight delay for mobile to avoid hover conflicts
+                    setTimeout(() => {
+                        this.selectedDate = e.currentTarget.dataset.date;
+                        this.showBookingForm(this.selectedDate);
+                    }, 100);
+                } else {
+                    this.selectedDate = e.currentTarget.dataset.date;
+                    this.showBookingForm(this.selectedDate);
+                }
             });
         });
 
@@ -321,7 +298,7 @@ class BookingCalendar {
         
         this.loadTimeSlots(date);
         formWrapper.style.display = 'block';
-        formWrapper.scrollIntoView({ behavior: 'smooth' });
+        formWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     async loadTimeSlots(date) {
@@ -329,12 +306,10 @@ class BookingCalendar {
         timeSlotSelect.innerHTML = '<option value="">Select time</option>';
         
         try {
-            // Get booked slots for this date
             const q = query(collection(db, 'bookings'), where('date', '==', date));
             const snapshot = await getDocs(q);
             const bookedTimes = snapshot.docs.map(doc => doc.data().time);
             
-            // Filter available slots
             const available = this.availableSlots.filter(slot => !bookedTimes.includes(slot));
             
             available.forEach(slot => {
@@ -383,7 +358,6 @@ class ReviewsManager {
             }).join('');
         } catch (error) {
             console.error('Error loading reviews:', error);
-            this.container.innerHTML = '<p style="text-align: center; color: var(--danger);">Error loading reviews</p>';
         }
     }
 }
@@ -478,59 +452,190 @@ class BookingHandler {
     }
 }
 
-// ==================== NAVIGATION HANDLER ====================
-class NavigationHandler {
+// ==================== BACK TO TOP BUTTON ====================
+class BackToTop {
     constructor() {
-        this.setupSmoothScroll();
-        this.setupMobileMenu();
+        this.createButton();
+        this.setupListeners();
     }
 
-    setupSmoothScroll() {
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                }
+    createButton() {
+        const button = document.createElement('button');
+        button.className = 'back-to-top';
+        button.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        button.setAttribute('aria-label', 'Back to top');
+        document.body.appendChild(button);
+        this.button = button;
+    }
+
+    setupListeners() {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                this.button.classList.add('show');
+            } else {
+                this.button.classList.remove('show');
+            }
+        });
+
+        this.button.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Touch optimization
+        this.button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
             });
         });
     }
+}
 
-    setupMobileMenu() {
-        const menuToggle = document.querySelector('.menu-toggle');
-        const navMenu = document.querySelector('.nav-menu');
-        
-        if (menuToggle && navMenu) {
-            menuToggle.addEventListener('click', () => {
-                navMenu.classList.toggle('active');
+// ==================== MOBILE MENU HANDLER ====================
+class MobileMenu {
+    constructor() {
+        this.menuToggle = document.querySelector('.menu-toggle');
+        this.navMenu = document.querySelector('.nav-menu');
+        this.body = document.body;
+        this.setupListeners();
+    }
+
+    setupListeners() {
+        if (this.menuToggle && this.navMenu) {
+            this.menuToggle.addEventListener('click', () => {
+                this.toggleMenu();
+            });
+
+            // Close menu when clicking on a link
+            this.navMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    this.closeMenu();
+                });
+            });
+
+            // Close menu on window resize if open
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 968 && this.navMenu.classList.contains('active')) {
+                    this.closeMenu();
+                }
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!this.navMenu.contains(e.target) && !this.menuToggle.contains(e.target) && this.navMenu.classList.contains('active')) {
+                    this.closeMenu();
+                }
+            });
+
+            // Prevent scroll when menu is open
+            this.navMenu.addEventListener('touchmove', (e) => {
+                if (this.navMenu.classList.contains('active')) {
+                    e.stopPropagation();
+                }
             });
         }
+    }
+
+    toggleMenu() {
+        this.navMenu.classList.toggle('active');
+        this.body.classList.toggle('menu-open');
+        
+        // Update icon
+        const icon = this.menuToggle.querySelector('i');
+        if (this.navMenu.classList.contains('active')) {
+            icon.className = 'fas fa-times';
+        } else {
+            icon.className = 'fas fa-bars';
+        }
+    }
+
+    closeMenu() {
+        this.navMenu.classList.remove('active');
+        this.body.classList.remove('menu-open');
+        const icon = this.menuToggle.querySelector('i');
+        icon.className = 'fas fa-bars';
+    }
+}
+
+// ==================== ACTIVE NAVIGATION HIGHLIGHT ====================
+class ActiveNavHighlight {
+    constructor() {
+        this.sections = document.querySelectorAll('section[id]');
+        this.navLinks = document.querySelectorAll('.nav-link');
+        this.setupListeners();
+    }
+
+    setupListeners() {
+        window.addEventListener('scroll', () => {
+            this.highlightNavigation();
+        });
+    }
+
+    highlightNavigation() {
+        const scrollY = window.scrollY;
+        
+        this.sections.forEach(section => {
+            const sectionHeight = section.offsetHeight;
+            const sectionTop = section.offsetTop - 100;
+            const sectionId = section.getAttribute('id');
+            
+            if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+                this.navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${sectionId}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
     }
 }
 
 // ==================== GLOBAL FUNCTIONS ====================
 window.selectPackage = (packageId, packageName) => {
     document.getElementById('packageSelect').value = packageId;
-    document.getElementById('book').scrollIntoView({ behavior: 'smooth' });
+    const bookSection = document.getElementById('book');
+    bookSection.scrollIntoView({ behavior: 'smooth' });
+    
+    // Small delay for mobile to ensure scroll completes
+    setTimeout(() => {
+        const bookingForm = document.getElementById('bookingFormWrapper');
+        if (bookingForm) {
+            bookingForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 500);
 };
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', async () => {
-    // Load settings first (this will update the video)
-    const settings = new SiteSettings();
-    
     // Initialize all components
+    const settings = new SiteSettings();
     const fbFeed = new FacebookFeed();
     const packages = new PackagesManager();
     const calendar = new BookingCalendar();
     const reviews = new ReviewsManager();
     const inquiryHandler = new InquiryHandler();
     const bookingHandler = new BookingHandler();
-    const navigation = new NavigationHandler();
+    const backToTop = new BackToTop();
+    const mobileMenu = new MobileMenu();
+    const navHighlight = new ActiveNavHighlight();
 
     // Refresh feed every 30 minutes
     setInterval(() => {
-        new FacebookFeed().loadFeed();
+        new FacebookFeed().initFeed();
     }, 30 * 60 * 1000);
+
+    // Fix for iOS viewport height
+    const setVH = () => {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
 });
