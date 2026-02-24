@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shane Photography | Wedding & Portrait Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-text">SHANE</span>
+                <span class="logo-accent">PHOTOGRAPHY</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#works" class="nav-link">Works</a>
+                <a href="#packages" class="nav-link">Packages</a>
+                <a href="#book" class="nav-link">Book Now</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </div>
+            <div class="nav-buttons">
+                <a href="#book" class="btn-primary">Inquire Now</a>
+                <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Video Background -->
+    <section id="home" class="hero">
+        <video autoplay muted loop playsinline class="hero-video" id="heroVideo">
+            <source src="assets/videos/hero-background.mp4" type="video/mp4">
+        </video>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">Eternal Frames,<br><span class="accent">Cinematic Soul</span></h1>
+            <p class="hero-subtitle">Engagements · Weddings · Portraits · Pre-Weddings · Destination</p>
+            <div class="hero-buttons">
+                <a href="#packages" class="btn-primary btn-large">View Packages</a>
+                <a href="#works" class="btn-outline btn-large">See Portfolio</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Facebook Feed Section -->
+    <section id="works" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Latest from Facebook</h2>
+                <p class="section-subtitle">Our recent work automatically synced</p>
+            </div>
+            <div class="fb-feed-grid" id="fbFeed">
+                <!-- Dynamically loaded from Facebook API -->
+            </div>
+            <div class="section-footer">
+                <a href="https://facebook.com/ShanePhotoography" target="_blank" class="btn-outline">
+                    <i class="fab fa-facebook"></i> Follow on Facebook
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Packages Section -->
+    <section id="packages" class="section bg-dark">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Photography Packages</h2>
+                <p class="section-subtitle">Choose the perfect plan for your special moments</p>
+            </div>
+            <div class="packages-grid" id="packagesContainer">
+                <!-- Packages loaded from Firebase -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking Calendar Section -->
+    <section id="book" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Book Your Session</h2>
+                <p class="section-subtitle">Select your preferred date and time</p>
+            </div>
+            <div class="booking-container">
+                <div class="calendar-wrapper">
+                    <div class="calendar-header">
+                        <button class="calendar-nav" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <h3 id="currentMonthDisplay">March 2026</h3>
+                        <button class="calendar-nav" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-grid" id="calendar">
+                        <!-- Calendar rendered by JS -->
+                    </div>
+                </div>
+                <div class="booking-form-wrapper" id="bookingFormWrapper" style="display: none;">
+                    <h3>Complete Your Booking</h3>
+                    <form id="bookingForm" class="booking-form">
+                        <input type="hidden" id="selectedDate">
+                        <div class="form-group">
+                            <label>Selected Date</label>
+                            <input type="text" id="displayDate" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Available Time Slots</label>
+                            <select id="timeSlot" required>
+                                <option value="">Select time</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Select Package</label>
+                            <select id="packageSelect" required>
+                                <option value="">Choose package</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Your Name</label>
+                                <input type="text" id="bookingName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="bookingEmail" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="bookingPhone" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Event Type</label>
+                                <input type="text" id="eventType" placeholder="e.g., Wedding">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Special Requests</label>
+                            <textarea id="specialRequests" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary btn-block">Confirm Booking</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <section id="reviews" class="section bg-dark">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Client Reviews</h2>
+                <p class="section-subtitle">What our couples say about us</p>
+            </div>
+            <div class="reviews-grid" id="reviewsContainer">
+                <!-- Reviews loaded from Firebase -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Get In Touch</h2>
+                <p class="section-subtitle">We'd love to hear about your vision</p>
+            </div>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <div class="contact-card">
+                        <i class="fas fa-phone-alt"></i>
+                        <h4>Phone</h4>
+                        <a href="tel:+94763823355">076 382 3355</a>
+                    </div>
+                    <div class="contact-card">
+                        <i class="fab fa-whatsapp"></i>
+                        <h4>WhatsApp</h4>
+                        <a href="https://wa.me/94763823355">+94 76 382 3355</a>
+                    </div>
+                    <div class="contact-card">
+                        <i class="fas fa-envelope"></i>
+                        <h4>Email</h4>
+                        <a href="mailto:shanercoulton@gmail.com">shanercoulton@gmail.com</a>
+                    </div>
+                    <div class="contact-card">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h4>Location</h4>
+                        <a href="#" onclick="window.open('https://maps.google.com/?q=Colombo+7+Sri+Lanka', '_blank')">
+                            Colombo 07, Sri Lanka
+                        </a>
+                    </div>
+                </div>
+                <div class="inquiry-form-wrapper">
+                    <h3>Quick Inquiry</h3>
+                    <form id="quickInquiryForm">
+                        <div class="form-group">
+                            <input type="text" placeholder="Your Name" id="inquiryName" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="Email Address" id="inquiryEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" placeholder="Phone Number" id="inquiryPhone">
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="Tell us about your event..." id="inquiryMessage" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary btn-block">Send Inquiry</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>SHANE PHOTOGRAPHY</h3>
+                    <p>Capturing your precious moments with cinematic excellence</p>
+                    <div class="social-links">
+                        <a href="https://facebook.com/ShanePhotoography" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="https://instagram.com/shane_photoography" target="_blank"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <a href="#home">Home</a>
+                    <a href="#works">Works</a>
+                    <a href="#packages">Packages</a>
+                    <a href="#book">Book Now</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Services</h4>
+                    <a href="#">Wedding Photography</a>
+                    <a href="#">Engagement Shoots</a>
+                    <a href="#">Pre-Wedding</a>
+                    <a href="#">Portraits</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Shane Photography. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
