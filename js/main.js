@@ -22,6 +22,31 @@ class SiteSettings {
             console.error('Error loading settings:', error);
         }
     }
+    // Add this method to your SiteSettings class
+forceVideoRefresh() {
+    const video = document.getElementById('heroVideo');
+    if (video) {
+        // Force video to recalculate dimensions on orientation change
+        video.style.width = '100%';
+        video.style.height = '100%';
+        
+        // Small delay to ensure DOM update
+        setTimeout(() => {
+            video.play().catch(e => console.log('Play failed:', e));
+        }, 100);
+    }
+}
+
+// Add this to your constructor or after video is loaded
+setupOrientationListener() {
+    window.addEventListener('resize', () => {
+        this.forceVideoRefresh();
+    });
+    
+    window.addEventListener('orientationchange', () => {
+        this.forceVideoRefresh();
+    });
+}
 
     applyVideoSettings() {
         const videoUrl = this.settings.heroVideoUrl;
