@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookings Management - Shane Photography Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/admin.css">
+    <style>
+        .calendar-view {
+            background: var(--dark-light);
+            border-radius: 30px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary);
+            padding: 0.5rem;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            background: var(--dark-lighter);
+            border-radius: 15px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+        .calendar-day:hover {
+            border-color: var(--primary);
+        }
+        .calendar-day.has-bookings {
+            background: rgba(245, 179, 66, 0.2);
+        }
+        .calendar-day.today {
+            border: 2px solid var(--primary);
+        }
+        .booking-count {
+            font-size: 0.8rem;
+            color: var(--primary);
+            margin-top: 0.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SHANE</h2>
+                <p>Photography Admin</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                <a href="inquiries.html"><i class="fas fa-inbox"></i> Inquiries</a>
+                <a href="bookings.html" class="active"><i class="fas fa-calendar-alt"></i> Bookings</a>
+                <a href="packages.html"><i class="fas fa-box"></i> Packages</a>
+                <a href="reviews.html"><i class="fas fa-star"></i> Reviews</a>
+                <a href="feed-sync.html"><i class="fab fa-facebook"></i> Facebook Feed</a>
+                <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Booking Management</h1>
+                <div class="admin-profile">
+                    <span>Welcome, Admin</span>
+                    <img src="https://ui-avatars.com/api/?name=Shane+Admin&background=f5b342&color=0b0b0b&size=128" alt="Admin">
+                </div>
+            </header>
+
+            <!-- View Toggle -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                <button class="btn-primary" onclick="showCalendarView()">
+                    <i class="fas fa-calendar"></i> Calendar View
+                </button>
+                <button class="btn-secondary" onclick="showListView()">
+                    <i class="fas fa-list"></i> List View
+                </button>
+                <button class="btn-secondary" onclick="openCreateSlotModal()" style="margin-left: auto;">
+                    <i class="fas fa-plus"></i> Add Time Slot
+                </button>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="calendarView" class="calendar-view">
+                <div class="calendar-header">
+                    <button class="btn-icon" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <h2 id="currentMonth">March 2026</h2>
+                    <button class="btn-icon" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Calendar will be rendered here -->
+                </div>
+            </div>
+
+            <!-- List View (hidden by default) -->
+            <div id="listView" style="display: none;">
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchBooking" placeholder="Search by name or email...">
+                    </div>
+                    <select class="filter-select" id="bookingStatusFilter">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <select class="filter-select" id="bookingDateFilter">
+                        <option value="upcoming">Upcoming</option>
+                        <option value="past">Past</option>
+                        <option value="all">All Dates</option>
+                    </select>
+                </div>
+
+                <!-- Bookings Table -->
+                <div class="recent-section">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Package</th>
+                                    <th>Event Type</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookingsTableBody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 3rem;">
+                                        <div class="spinner"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Slot Management -->
+            <div class="recent-section" style="margin-top: 2rem;">
+                <h2>Available Time Slots</h2>
+                <div id="timeSlotsList" class="time-slots-grid">
+                    <!-- Time slots will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Booking Modal -->
+    <div class="modal" id="bookingModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="closeModal('bookingModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;" id="bookingModalTitle">Create Booking</h3>
+            
+            <form id="bookingForm">
+                <input type="hidden" id="bookingId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client Name</label>
+                        <input type="text" id="bookingClientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="bookingClientEmail" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="bookingClientPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Event Type</label>
+                        <input type="text" id="bookingEventType" placeholder="Wedding/Engagement/etc">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="bookingDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Time</label>
+                        <select id="bookingTime" required>
+                            <option value="">Select time</option>
+                            <option value="09:00">09:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Package</label>
+                    <select id="bookingPackage" required>
+                        <option value="">Select package</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="bookingStatus">
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Special Requests</label>
+                    <textarea id="bookingNotes" rows="3"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1;">Save Booking</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('bookingModal')" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Time Slot Modal -->
+    <div class="modal" id="timeSlotModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <button class="modal-close" onclick="closeModal('timeSlotModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Add Time Slots</h3>
+            
+            <form id="timeSlotForm">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="slotDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Time Slots</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
+                        <label><input type="checkbox" value="09:00"> 09:00 AM</label>
+                        <label><input type="checkbox" value="10:00"> 10:00 AM</label>
+                        <label><input type="checkbox" value="11:00"> 11:00 AM</label>
+                        <label><input type="checkbox" value="14:00"> 02:00 PM</label>
+                        <label><input type="checkbox" value="15:00"> 03:00 PM</label>
+                        <label><input type="checkbox" value="16:00"> 04:00 PM</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary btn-block">Add Slots</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from '../js/firebase-config.js';
+        import { 
+            collection, query, getDocs, doc, addDoc, updateDoc, deleteDoc, where, orderBy 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // State
+        let currentMonth = new Date();
+        let currentBookings = [];
+        let currentView = 'calendar';
+
+        // Initialize
+        async function loadBookings() {
+            try {
+                const q = query(collection(db, 'bookings'), orderBy('date', 'asc'), orderBy('time', 'asc'));
+                const snapshot = await getDocs(q);
+                currentBookings = snapshot.docs;
+                
+                if (currentView === 'calendar') {
+                    renderCalendar();
+                } else {
+                    renderBookingsList();
+                }
+                
+                loadTimeSlots();
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+            }
+        }
+
+        // Calendar View
+        function renderCalendar() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            
+            document.getElementById('currentMonth').textContent = 
+                currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            let calendarHTML = '';
+            
+            // Week day headers
+            const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            weekDays.forEach(day => {
+                calendarHTML += `<div class="calendar-day-header">${day}</div>`;
+            });
+
+            // Empty cells
+            for (let i = 0; i < firstDay; i++) {
+                calendarHTML += '<div class="calendar-day"></div>';
+            }
+
+            // Days
+            const today = new Date().toDateString();
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
+                const dayBookings = currentBookings.filter(d => {
+                    const bookingDate = d.data().date;
+                    return bookingDate === dateStr;
+                });
+                
+                const isToday = new Date(year, month, day).toDateString() === today;
+                
+                calendarHTML += `
+                    <div class="calendar-day ${dayBookings.length ? 'has-bookings' : ''} ${isToday ? 'today' : ''}" onclick="showDateBookings('${dateStr}')">
+                        <div style="font-weight: bold;">${day}</div>
+                        ${dayBookings.length ? `<div class="booking-count">${dayBookings.length} booking${dayBookings.length > 1 ? 's' : ''}</div>` : ''}
+                    </div>
+                `;
+            }
+
+            document.getElementById('calendarGrid').innerHTML = calendarHTML;
+        }
+
+        // List View
+        async function renderBookingsList() {
+            const tbody = document.getElementById('bookingsTableBody');
+            
+            if (currentBookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No bookings found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = currentBookings.map(doc => {
+                const b = doc.data();
+                return `
+                    <tr>
+                        <td><strong>${b.name}</strong></td>
+                        <td>${b.date || '-'}</td>
+                        <td>${b.time || '-'}</td>
+                        <td>${b.packageName || '-'}</td>
+                        <td>${b.eventType || '-'}</td>
+                        <td><span class="status-badge ${b.status || 'pending'}">${b.status || 'pending'}</span></td>
+                        <td>
+                            <button class="btn-icon" onclick="editBooking('${doc.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-icon" onclick="updateBookingStatus('${doc.id}', '${b.status}')"><i class="fas fa-sync-alt"></i></button>
+                            <button class="btn-icon" onclick="deleteBooking('${doc.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Time Slots Management
+        async function loadTimeSlots() {
+            const slotsContainer = document.getElementById('timeSlotsList');
+            const q = query(collection(db, 'available_slots'), where('isBooked', '==', false), orderBy('date', 'asc'));
+            const snapshot = await getDocs(q);
+            
+            slotsContainer.innerHTML = snapshot.docs.map(doc => {
+                const slot = doc.data();
+                return `
+                    <div class="time-slot" onclick="bookTimeSlot('${doc.id}', '${slot.date}', '${slot.time}')">
+                        <div><strong>${slot.date}</strong></div>
+                        <div>${slot.time}</div>
+                        <small style="color: var(--gray);">Available</small>
+                    </div>
+                `;
+            }).join('') || '<div style="grid-column: 1/-1; text-align: center;">No available slots</div>';
+        }
+
+        // CRUD Operations
+        window.openCreateSlotModal = () => {
+            document.getElementById('slotDate').value = new Date().toISOString().split('T')[0];
+            openModal('timeSlotModal');
+        };
+
+        document.getElementById('timeSlotForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const date = document.getElementById('slotDate').value;
+            const selectedTimes = Array.from(document.querySelectorAll('#timeSlotForm input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+            
+            for (const time of selectedTimes) {
+                await addDoc(collection(db, 'available_slots'), {
+                    date: date,
+                    time: time,
+                    isBooked: false,
+                    createdAt: new Date().toISOString()
+                });
+            }
+            
+            closeModal('timeSlotModal');
+            loadTimeSlots();
+        });
+
+        window.bookTimeSlot = (slotId, date, time) => {
+            document.getElementById('bookingDate').value = date;
+            document.getElementById('bookingTime').value = time;
+            document.getElementById('bookingModalTitle').textContent = 'Create Booking';
+            document.getElementById('bookingForm').reset();
+            document.getElementById('bookingId').value = '';
+            openModal('bookingModal');
+        };
+
+        window.editBooking = async (id) => {
+            const docRef = doc(db, 'bookings', id);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const b = docSnap.data();
+                document.getElementById('bookingModalTitle').textContent = 'Edit Booking';
+                document.getElementById('bookingId').value = id;
+                document.getElementById('bookingClientName').value = b.name || '';
+                document.getElementById('bookingClientEmail').value = b.email || '';
+                document.getElementById('bookingClientPhone').value = b.phone || '';
+                document.getElementById('bookingEventType').value = b.eventType || '';
+                document.getElementById('bookingDate').value = b.date || '';
+                document.getElementById('bookingTime').value = b.time || '';
+                document.getElementById('bookingStatus').value = b.status || 'pending';
+                document.getElementById('bookingNotes').value = b.specialRequests || '';
+                
+                // Load and select package
+                await loadPackagesSelect();
+                document.getElementById('bookingPackage').value = b.packageId || '';
+                
+                openModal('bookingModal');
+            }
+        };
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const bookingData = {
+                name: document.getElementById('bookingClientName').value,
+                email: document.getElementById('bookingClientEmail').value,
+                phone: document.getElementById('bookingClientPhone').value,
+                eventType: document.getElementById('bookingEventType').value,
+                date: document.getElementById('bookingDate').value,
+                time: document.getElementById('bookingTime').value,
+                packageId: document.getElementById('bookingPackage').value,
+                packageName: document.getElementById('bookingPackage').selectedOptions[0]?.text,
+                status: document.getElementById('bookingStatus').value,
+                specialRequests: document.getElementById('bookingNotes').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            const bookingId = document.getElementById('bookingId').value;
+            
+            try {
+                if (bookingId) {
+                    await updateDoc(doc(db, 'bookings', bookingId), bookingData);
+                } else {
+                    bookingData.createdAt = new Date().toISOString();
+                    await addDoc(collection(db, 'bookings'), bookingData);
+                    
+                    // Mark slot as booked
+                    const slotQuery = query(
+                        collection(db, 'available_slots'), 
+                        where('date', '==', bookingData.date),
+                        where('time', '==', bookingData.time)
+                    );
+                    const slotSnapshot = await getDocs(slotQuery);
+                    slotSnapshot.forEach(async (slotDoc) => {
+                        await updateDoc(doc(db, 'available_slots', slotDoc.id), { isBooked: true });
+                    });
+                }
+                
+                closeModal('bookingModal');
+                loadBookings();
+                
+            } catch (error) {
+                console.error('Error saving booking:', error);
+                alert('Error saving booking');
+            }
+        });
+
+        window.updateBookingStatus = async (id, currentStatus) => {
+            const newStatus = prompt('Enter new status (pending/confirmed/completed/cancelled):', currentStatus);
+            if (newStatus && ['pending', 'confirmed', 'completed', 'cancelled'].includes(newStatus)) {
+                await updateDoc(doc(db, 'bookings', id), { status: newStatus });
+                loadBookings();
+            }
+        };
+
+        window.deleteBooking = (id) => {
+            if (confirm('Delete this booking?')) {
+                deleteDoc(doc(db, 'bookings', id));
+                loadBookings();
+            }
+        };
+
+        window.showDateBookings = (date) => {
+            const filtered = currentBookings.filter(d => d.data().date === date);
+            if (filtered.length) {
+                showListView();
+                renderBookingsList(filtered);
+            }
+        };
+
+        window.showCalendarView = () => {
+            currentView = 'calendar';
+            document.getElementById('calendarView').style.display = 'block';
+            document.getElementById('listView').style.display = 'none';
+            renderCalendar();
+        };
+
+        window.showListView = () => {
+            currentView = 'list';
+            document.getElementById('calendarView').style.display = 'none';
+            document.getElementById('listView').style.display = 'block';
+            renderBookingsList();
+        };
+
+        window.changeMonth = (delta) => {
+            currentMonth.setMonth(currentMonth.getMonth() + delta);
+            renderCalendar();
+        };
+
+        async function loadPackagesSelect() {
+            const select = document.getElementById('bookingPackage');
+            const snapshot = await getDocs(collection(db, 'packages'));
+            select.innerHTML = '<option value="">Select package</option>' + 
+                snapshot.docs.map(doc => `<option value="${doc.id}">${doc.data().name}</option>`).join('');
+        }
+
+        // Modal functions
+        window.openModal = (modalId) => {
+            document.getElementById(modalId).classList.add('active');
+        };
+
+        window.closeModal = (modalId) => {
+            document.getElementById(modalId).classList.remove('active');
+        };
+
+        // Initial load
+        loadBookings();
+        loadPackagesSelect();
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>
