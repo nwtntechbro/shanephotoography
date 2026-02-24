@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Shane Photography</title>
+    <title>Dashboard - Shane Photography Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body>
@@ -15,55 +16,92 @@
                 <h2>SHANE</h2>
                 <p>Photography Admin</p>
             </div>
+            
             <nav class="sidebar-nav">
-                <a href="index.html" class="active"><i class="fas fa-dashboard"></i> Dashboard</a>
-                <a href="inquiries.html"><i class="fas fa-inbox"></i> Inquiries</a>
-                <a href="bookings.html"><i class="fas fa-calendar"></i> Bookings</a>
-                <a href="packages.html"><i class="fas fa-box"></i> Packages</a>
-                <a href="reviews.html"><i class="fas fa-star"></i> Reviews</a>
-                <a href="feed-sync.html"><i class="fas fa-facebook"></i> Facebook Feed</a>
-                <a href="settings.html"><i class="fas fa-gear"></i> Settings</a>
+                <a href="index.html" class="active">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="inquiries.html">
+                    <i class="fas fa-inbox"></i>
+                    <span>Inquiries</span>
+                </a>
+                <a href="bookings.html">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Bookings</span>
+                </a>
+                <a href="packages.html">
+                    <i class="fas fa-box"></i>
+                    <span>Packages</span>
+                </a>
+                <a href="reviews.html">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="feed-sync.html">
+                    <i class="fab fa-facebook"></i>
+                    <span>Facebook Feed</span>
+                </a>
+                <a href="settings.html">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
             </nav>
+            
             <div class="sidebar-footer">
-                <a href="#" id="logoutBtn"><i class="fas fa-sign-out"></i> Logout</a>
+                <a href="#" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
             </div>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
             <header class="content-header">
-                <h1>Dashboard</h1>
+                <h1>Dashboard Overview</h1>
                 <div class="admin-profile">
-                    <span>Admin</span>
-                    <img src="../assets/images/admin-avatar.jpg" alt="Admin">
+                    <span>Welcome, Admin</span>
+                    <img src="https://ui-avatars.com/api/?name=Shane+Admin&background=f5b342&color=0b0b0b&size=128" alt="Admin">
                 </div>
             </header>
 
             <!-- Stats Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-inbox"></i></div>
+                    <div class="stat-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
                     <div class="stat-details">
                         <h3 id="newInquiriesCount">0</h3>
                         <p>New Inquiries</p>
                     </div>
                 </div>
+                
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
                     <div class="stat-details">
                         <h3 id="todayBookings">0</h3>
                         <p>Today's Bookings</p>
                     </div>
                 </div>
+                
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
                     <div class="stat-details">
                         <h3 id="pendingBookings">0</h3>
                         <p>Pending Bookings</p>
                     </div>
                 </div>
+                
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
                     <div class="stat-details">
                         <h3 id="totalClients">0</h3>
                         <p>Total Clients</p>
@@ -71,22 +109,78 @@
                 </div>
             </div>
 
-            <!-- Recent Inquiries -->
+            <!-- Widget Grid -->
+            <div class="widget-grid">
+                <!-- Recent Activity Widget -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <h3>Recent Activity</h3>
+                        <i class="fas fa-history" style="color: var(--primary);"></i>
+                    </div>
+                    <div class="widget-content" id="recentActivity">
+                        <div class="alert alert-info">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Loading activities...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Widget -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <h3>Quick Actions</h3>
+                        <i class="fas fa-bolt" style="color: var(--primary);"></i>
+                    </div>
+                    <div class="widget-content">
+                        <button class="btn-primary" onclick="window.location.href='inquiries.html'" style="width: 100%; margin-bottom: 1rem;">
+                            <i class="fas fa-reply"></i> Reply to Inquiries
+                        </button>
+                        <button class="btn-secondary" onclick="window.location.href='bookings.html'" style="width: 100%; margin-bottom: 1rem;">
+                            <i class="fas fa-calendar-plus"></i> Add Booking Slot
+                        </button>
+                        <button class="btn-secondary" onclick="window.location.href='packages.html'" style="width: 100%;">
+                            <i class="fas fa-plus"></i> Create Package
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Calendar Preview Widget -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <h3>Today's Schedule</h3>
+                        <i class="fas fa-calendar-day" style="color: var(--primary);"></i>
+                    </div>
+                    <div class="widget-content" id="todaySchedule">
+                        <div class="alert alert-info">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Loading schedule...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Inquiries Table -->
             <div class="recent-section">
                 <h2>Recent Inquiries</h2>
                 <div class="table-responsive">
-                    <table class="data-table" id="recentInquiries">
+                    <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Date</th>
+                                <th>Phone</th>
+                                <th>Message</th>
                                 <th>Status</th>
-                                <th>Action</th>
+                                <th>Date</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Filled by JavaScript -->
+                        <tbody id="recentInquiriesTable">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 2rem;">
+                                    <div class="spinner" style="margin: 0 auto;"></div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -96,19 +190,24 @@
             <div class="recent-section">
                 <h2>Upcoming Bookings</h2>
                 <div class="table-responsive">
-                    <table class="data-table" id="upcomingBookings">
+                    <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Client</th>
                                 <th>Date</th>
                                 <th>Time</th>
                                 <th>Package</th>
+                                <th>Event Type</th>
                                 <th>Status</th>
-                                <th>Action</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Filled by JavaScript -->
+                        <tbody id="upcomingBookingsTable">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 2rem;">
+                                    <div class="spinner" style="margin: 0 auto;"></div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -116,6 +215,192 @@
         </main>
     </div>
 
-    <script type="module" src="../js/admin.js"></script>
+    <!-- Logout Confirmation Modal -->
+    <div class="modal" id="logoutModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('logoutModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--primary); margin-bottom: 1rem;">Confirm Logout</h3>
+            <p style="color: var(--gray); margin-bottom: 2rem;">Are you sure you want to logout?</p>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-secondary" onclick="closeModal('logoutModal')" style="flex: 1;">Cancel</button>
+                <button class="btn-primary" onclick="logout()" style="flex: 1;">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from '../js/firebase-config.js';
+        import { 
+            collection, query, getDocs, orderBy, limit, where 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // Check authentication
+        const user = auth.currentUser;
+        if (!user && !sessionStorage.getItem('adminLoggedIn')) {
+            window.location.href = 'login.html';
+        }
+
+        // Load Dashboard Data
+        async function loadDashboard() {
+            try {
+                // Load stats
+                const inquiriesQuery = query(collection(db, 'inquiries'), where('status', '==', 'new'));
+                const inquiriesSnapshot = await getDocs(inquiriesQuery);
+                document.getElementById('newInquiriesCount').textContent = inquiriesSnapshot.size;
+
+                // Today's date
+                const today = new Date().toISOString().split('T')[0];
+                const todayQuery = query(collection(db, 'bookings'), where('date', '==', today));
+                const todaySnapshot = await getDocs(todayQuery);
+                document.getElementById('todayBookings').textContent = todaySnapshot.size;
+
+                // Pending bookings
+                const pendingQuery = query(collection(db, 'bookings'), where('status', '==', 'pending'));
+                const pendingSnapshot = await getDocs(pendingQuery);
+                document.getElementById('pendingBookings').textContent = pendingSnapshot.size;
+
+                // Total clients (unique emails)
+                const allBookings = await getDocs(collection(db, 'bookings'));
+                const uniqueEmails = new Set(allBookings.docs.map(doc => doc.data().email));
+                document.getElementById('totalClients').textContent = uniqueEmails.size;
+
+                // Recent inquiries
+                const recentInquiries = query(collection(db, 'inquiries'), orderBy('createdAt', 'desc'), limit(5));
+                const recentSnapshot = await getDocs(recentInquiries);
+                
+                let inquiriesHTML = '';
+                recentSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    inquiriesHTML += `
+                        <tr>
+                            <td>${data.name || 'N/A'}</td>
+                            <td>${data.email || 'N/A'}</td>
+                            <td>${data.phone || '-'}</td>
+                            <td>${data.message ? data.message.substring(0, 30) + '...' : '-'}</td>
+                            <td><span class="status-badge ${data.status || 'new'}">${data.status || 'new'}</span></td>
+                            <td>${data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString() : '-'}</td>
+                            <td>
+                                <button class="btn-icon" onclick="viewInquiry('${doc.id}')"><i class="fas fa-eye"></i></button>
+                                <button class="btn-icon" onclick="replyInquiry('${doc.id}')"><i class="fas fa-reply"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                document.getElementById('recentInquiriesTable').innerHTML = inquiriesHTML || '<tr><td colspan="7" style="text-align: center;">No recent inquiries</td></tr>';
+
+                // Upcoming bookings
+                const upcomingBookings = query(collection(db, 'bookings'), where('date', '>=', today), orderBy('date', 'asc'), limit(5));
+                const upcomingSnapshot = await getDocs(upcomingBookings);
+                
+                let bookingsHTML = '';
+                upcomingSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    bookingsHTML += `
+                        <tr>
+                            <td>${data.name || 'N/A'}</td>
+                            <td>${data.date || '-'}</td>
+                            <td>${data.time || '-'}</td>
+                            <td>${data.packageName || '-'}</td>
+                            <td>${data.eventType || '-'}</td>
+                            <td><span class="status-badge ${data.status || 'pending'}">${data.status || 'pending'}</span></td>
+                            <td>
+                                <button class="btn-icon" onclick="viewBooking('${doc.id}')"><i class="fas fa-eye"></i></button>
+                                <button class="btn-icon" onclick="editBooking('${doc.id}')"><i class="fas fa-edit"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                document.getElementById('upcomingBookingsTable').innerHTML = bookingsHTML || '<tr><td colspan="7" style="text-align: center;">No upcoming bookings</td></tr>';
+
+                // Recent activity
+                const activities = [];
+                recentSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    activities.push(`
+                        <div class="alert alert-info" style="margin-bottom: 0.5rem;">
+                            <i class="fas fa-inbox"></i>
+                            New inquiry from ${data.name}
+                        </div>
+                    `);
+                });
+                
+                document.getElementById('recentActivity').innerHTML = activities.join('') || '<div class="alert">No recent activity</div>';
+
+                // Today's schedule
+                const todayBookings = await getDocs(todayQuery);
+                let scheduleHTML = '';
+                todayBookings.forEach(doc => {
+                    const data = doc.data();
+                    scheduleHTML += `
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <span>${data.time} - ${data.name}</span>
+                            <span class="status-badge ${data.status || 'pending'}">${data.status || 'pending'}</span>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('todaySchedule').innerHTML = scheduleHTML || '<div class="alert">No bookings today</div>';
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.querySelectorAll('.data-table tbody').forEach(tbody => {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+                });
+            }
+        }
+
+        // Modal functions
+        window.openModal = (modalId) => {
+            document.getElementById(modalId).classList.add('active');
+        };
+
+        window.closeModal = (modalId) => {
+            document.getElementById(modalId).classList.remove('active');
+        };
+
+        window.logout = async () => {
+            try {
+                await signOut(auth);
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        };
+
+        // Logout button handler
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            openModal('logoutModal');
+        });
+
+        // Load data on page load
+        loadDashboard();
+
+        // Auto refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+
+        // Placeholder functions
+        window.viewInquiry = (id) => {
+            window.location.href = `inquiries.html?view=${id}`;
+        };
+
+        window.replyInquiry = (id) => {
+            window.location.href = `inquiries.html?reply=${id}`;
+        };
+
+        window.viewBooking = (id) => {
+            window.location.href = `bookings.html?view=${id}`;
+        };
+
+        window.editBooking = (id) => {
+            window.location.href = `bookings.html?edit=${id}`;
+        };
+    </script>
 </body>
 </html>
