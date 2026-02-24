@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews Management - Shane Photography Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SHANE</h2>
+                <p>Photography Admin</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                <a href="inquiries.html"><i class="fas fa-inbox"></i> Inquiries</a>
+                <a href="bookings.html"><i class="fas fa-calendar-alt"></i> Bookings</a>
+                <a href="packages.html"><i class="fas fa-box"></i> Packages</a>
+                <a href="reviews.html" class="active"><i class="fas fa-star"></i> Reviews</a>
+                <a href="feed-sync.html"><i class="fab fa-facebook"></i> Facebook Feed</a>
+                <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Review Management</h1>
+                <div class="admin-profile">
+                    <span>Welcome, Admin</span>
+                    <img src="https://ui-avatars.com/api/?name=Shane+Admin&background=f5b342&color=0b0b0b&size=128" alt="Admin">
+                </div>
+            </header>
+
+            <!-- Stats Summary -->
+            <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="stat-card" style="padding: 1rem;">
+                    <div class="stat-icon" style="width: 40px; height: 40px;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="totalReviews">0</h3>
+                        <p>Total Reviews</p>
+                    </div>
+                </div>
+                <div class="stat-card" style="padding: 1rem;">
+                    <div class="stat-icon" style="width: 40px; height: 40px;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="approvedReviews">0</h3>
+                        <p>Approved</p>
+                    </div>
+                </div>
+                <div class="stat-card" style="padding: 1rem;">
+                    <div class="stat-icon" style="width: 40px; height: 40px;">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="pendingReviews">0</h3>
+                        <p>Pending</p>
+                    </div>
+                </div>
+                <div class="stat-card" style="padding: 1rem;">
+                    <div class="stat-icon" style="width: 40px; height: 40px;">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="avgRating">0.0</h3>
+                        <p>Avg Rating</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="filters-bar">
+                <button class="btn-primary" onclick="openCreateReviewModal()">
+                    <i class="fas fa-plus"></i> Add Review
+                </button>
+                <select class="filter-select" id="approvalFilter">
+                    <option value="all">All Reviews</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                </select>
+                <select class="filter-select" id="ratingFilter">
+                    <option value="all">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="2">2 Stars</option>
+                    <option value="1">1 Star</option>
+                </select>
+            </div>
+
+            <!-- Reviews Grid -->
+            <div class="reviews-grid" id="reviewsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+                <!-- Reviews will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Review Modal -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="closeModal('reviewModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;" id="reviewModalTitle">Add New Review</h3>
+            
+            <form id="reviewForm">
+                <input type="hidden" id="reviewId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client Name</label>
+                        <input type="text" id="reviewName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Rating</label>
+                        <select id="reviewRating" required>
+                            <option value="5">5 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="2">2 Stars</option>
+                            <option value="1">1 Star</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Review Text</label>
+                    <textarea id="reviewText" rows="4" required placeholder="Client's review..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Event Type</label>
+                        <input type="text" id="reviewEventType" placeholder="e.g., Wedding, Engagement">
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="reviewDate">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <input type="checkbox" id="reviewApproved" style="width: 20px; height: 20px;">
+                        <label style="margin: 0;">Approved (visible on website)</label>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1;">Save Review</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('reviewModal')" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from '../js/firebase-config.js';
+        import { 
+            collection, query, getDocs, doc, addDoc, updateDoc, deleteDoc, where, orderBy 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        let currentReviewId = null;
+
+        // Load reviews
+        async function loadReviews() {
+            try {
+                const grid = document.getElementById('reviewsGrid');
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;"><div class="spinner"></div><p>Loading reviews...</p></div>';
+
+                let constraints = [];
+                
+                // Apply filters
+                const approval = document.getElementById('approvalFilter').value;
+                const rating = document.getElementById('ratingFilter').value;
+                
+                if (approval !== 'all') {
+                    constraints.push(where('approved', '==', approval === 'approved'));
+                }
+                if (rating !== 'all') {
+                    constraints.push(where('rating', '==', parseInt(rating)));
+                }
+                
+                constraints.push(orderBy('createdAt', 'desc'));
+
+                const q = query(collection(db, 'reviews'), ...constraints);
+                const snapshot = await getDocs(q);
+                
+                if (snapshot.empty) {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;">No reviews found</div>';
+                    updateStats([]);
+                    return;
+                }
+
+                const reviews = snapshot.docs;
+                updateStats(reviews);
+                
+                grid.innerHTML = reviews.map(doc => {
+                    const r = doc.data();
+                    const date = r.createdAt ? new Date(r.createdAt.toDate()).toLocaleDateString() : 'N/A';
+                    
+                    return `
+                        <div class="review-card" style="background: var(--dark-light); border: 1px solid ${r.approved ? 'var(--primary)' : '#333'};">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h3 style="color: var(--light);">${r.name}</h3>
+                                <div class="review-stars" style="color: var(--primary);">
+                                    ${Array(r.rating).fill('<i class="fas fa-star"></i>').join('')}
+                                </div>
+                            </div>
+                            
+                            <p style="color: var(--gray); font-style: italic; margin-bottom: 1rem;">"${r.text}"</p>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <span style="color: var(--primary);">${r.eventType || 'Client'}</span>
+                                <span style="color: var(--gray); font-size: 0.9rem;">${date}</span>
+                            </div>
+                            
+                            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; border-top: 1px solid #333; padding-top: 1rem;">
+                                <button class="btn-icon" onclick="editReview('${doc.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn-icon" onclick="toggleReviewApproval('${doc.id}', ${r.approved})" title="${r.approved ? 'Unapprove' : 'Approve'}">
+                                    <i class="fas ${r.approved ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                                </button>
+                                <button class="btn-icon" onclick="deleteReview('${doc.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                                <span class="status-badge ${r.approved ? 'active' : 'pending'}" style="margin-left: auto;">
+                                    ${r.approved ? 'Approved' : 'Pending'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading reviews:', error);
+                document.getElementById('reviewsGrid').innerHTML = 
+                    '<div style="grid-column: 1/-1; text-align: center; color: var(--danger);">Error loading reviews</div>';
+            }
+        }
+
+        // Update statistics
+        function updateStats(reviews) {
+            const total = reviews.length;
+            const approved = reviews.filter(d => d.data().approved).length;
+            const pending = total - approved;
+            const avgRating = reviews.reduce((sum, d) => sum + d.data().rating, 0) / total || 0;
+            
+            document.getElementById('totalReviews').textContent = total;
+            document.getElementById('approvedReviews').textContent = approved;
+            document.getElementById('pendingReviews').textContent = pending;
+            document.getElementById('avgRating').textContent = avgRating.toFixed(1);
+        }
+
+        // CRUD Operations
+        window.openCreateReviewModal = () => {
+            document.getElementById('reviewModalTitle').textContent = 'Add New Review';
+            document.getElementById('reviewForm').reset();
+            document.getElementById('reviewId').value = '';
+            document.getElementById('reviewApproved').checked = true;
+            document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
+            openModal('reviewModal');
+        };
+
+        window.editReview = async (id) => {
+            currentReviewId = id;
+            const docRef = doc(db, 'reviews', id);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const r = docSnap.data();
+                document.getElementById('reviewModalTitle').textContent = 'Edit Review';
+                document.getElementById('reviewId').value = id;
+                document.getElementById('reviewName').value = r.name || '';
+                document.getElementById('reviewRating').value = r.rating || '5';
+                document.getElementById('reviewText').value = r.text || '';
+                document.getElementById('reviewEventType').value = r.eventType || '';
+                document.getElementById('reviewApproved').checked = r.approved || false;
+                
+                if (r.createdAt) {
+                    const date = r.createdAt.toDate ? new Date(r.createdAt.toDate()) : new Date();
+                    document.getElementById('reviewDate').value = date.toISOString().split('T')[0];
+                }
+                
+                openModal('reviewModal');
+            }
+        };
+
+        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const reviewData = {
+                name: document.getElementById('reviewName').value,
+                rating: parseInt(document.getElementById('reviewRating').value),
+                text: document.getElementById('reviewText').value,
+                eventType: document.getElementById('reviewEventType').value,
+                approved: document.getElementById('reviewApproved').checked,
+                updatedAt: new Date().toISOString()
+            };
+
+            const reviewId = document.getElementById('reviewId').value;
+            
+            try {
+                if (reviewId) {
+                    await updateDoc(doc(db, 'reviews', reviewId), reviewData);
+                } else {
+                    reviewData.createdAt = new Date().toISOString();
+                    await addDoc(collection(db, 'reviews'), reviewData);
+                }
+                
+                closeModal('reviewModal');
+                loadReviews();
+                
+            } catch (error) {
+                console.error('Error saving review:', error);
+                alert('Error saving review');
+            }
+        });
+
+        window.toggleReviewApproval = async (id, currentStatus) => {
+            await updateDoc(doc(db, 'reviews', id), { approved: !currentStatus });
+            loadReviews();
+        };
+
+        window.deleteReview = (id) => {
+            if (confirm('Delete this review?')) {
+                deleteDoc(doc(db, 'reviews', id));
+                loadReviews();
+            }
+        };
+
+        // Filter handlers
+        document.getElementById('approvalFilter').addEventListener('change', loadReviews);
+        document.getElementById('ratingFilter').addEventListener('change', loadReviews);
+
+        // Modal functions
+        window.openModal = (modalId) => {
+            document.getElementById(modalId).classList.add('active');
+        };
+
+        window.closeModal = (modalId) => {
+            document.getElementById(modalId).classList.remove('active');
+        };
+
+        // Initial load
+        loadReviews();
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>
