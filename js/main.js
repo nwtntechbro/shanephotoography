@@ -22,31 +22,28 @@ class SiteSettings {
             console.error('Error loading settings:', error);
         }
     }
-    // Add this method to your SiteSettings class
-forceVideoRefresh() {
-    const video = document.getElementById('heroVideo');
-    if (video) {
-        // Force video to recalculate dimensions on orientation change
-        video.style.width = '100%';
-        video.style.height = '100%';
-        
-        // Small delay to ensure DOM update
-        setTimeout(() => {
-            video.play().catch(e => console.log('Play failed:', e));
-        }, 100);
-    }
-}
 
-// Add this to your constructor or after video is loaded
-setupOrientationListener() {
-    window.addEventListener('resize', () => {
-        this.forceVideoRefresh();
-    });
-    
-    window.addEventListener('orientationchange', () => {
-        this.forceVideoRefresh();
-    });
-}
+    forceVideoRefresh() {
+        const video = document.getElementById('heroVideo');
+        if (video) {
+            video.style.width = '100%';
+            video.style.height = '100%';
+            
+            setTimeout(() => {
+                video.play().catch(e => console.log('Play failed:', e));
+            }, 100);
+        }
+    }
+
+    setupOrientationListener() {
+        window.addEventListener('resize', () => {
+            this.forceVideoRefresh();
+        });
+        
+        window.addEventListener('orientationchange', () => {
+            this.forceVideoRefresh();
+        });
+    }
 
     applyVideoSettings() {
         const videoUrl = this.settings.heroVideoUrl;
@@ -116,6 +113,126 @@ setupOrientationListener() {
                 link.textContent = this.settings.contactWhatsapp;
             });
         }
+    }
+}
+
+// ==================== POPUP NOTIFICATION SYSTEM ====================
+class NotificationPopup {
+    constructor() {
+        this.createContainer();
+    }
+
+    createContainer() {
+        // Remove existing container if any
+        const existingContainer = document.getElementById('notification-container');
+        if (existingContainer) {
+            existingContainer.remove();
+        }
+
+        // Create new container
+        const container = document.createElement('div');
+        container.id = 'notification-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        `;
+        document.body.appendChild(container);
+        this.container = container;
+    }
+
+    show(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `notification-popup ${type}`;
+        
+        // Set styles based on type
+        const colors = {
+            success: {
+                bg: 'rgba(76, 175, 80, 0.95)',
+                icon: 'fa-check-circle',
+                border: '#4caf50'
+            },
+            error: {
+                bg: 'rgba(244, 67, 54, 0.95)',
+                icon: 'fa-exclamation-circle',
+                border: '#f44336'
+            },
+            warning: {
+                bg: 'rgba(255, 152, 0, 0.95)',
+                icon: 'fa-exclamation-triangle',
+                border: '#ff9800'
+            },
+            info: {
+                bg: 'rgba(33, 150, 243, 0.95)',
+                icon: 'fa-info-circle',
+                border: '#2196f3'
+            }
+        };
+
+        const color = colors[type] || colors.success;
+
+        notification.style.cssText = `
+            background: ${color.bg};
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-left: 4px solid ${color.border};
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            cursor: pointer;
+            min-width: 300px;
+            max-width: 400px;
+        `;
+
+        notification.innerHTML = `
+            <i class="fas ${color.icon}" style="font-size: 1.5rem;"></i>
+            <span style="flex: 1;">${message}</span>
+            <i class="fas fa-times" style="opacity: 0.7; font-size: 1rem; margin-left: 10px;"></i>
+        `;
+
+        this.container.appendChild(notification);
+
+        // Animate in
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+            notification.style.opacity = '1';
+        }, 10);
+
+        // Auto remove after 5 seconds
+        const timeout = setTimeout(() => {
+            this.removeNotification(notification);
+        }, 5000);
+
+        // Remove on click
+        notification.addEventListener('click', () => {
+            clearTimeout(timeout);
+            this.removeNotification(notification);
+        });
+    }
+
+    removeNotification(notification) {
+        notification.style.transform = 'translateX(400px)';
+        notification.style.opacity = '0';
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
     }
 }
 
@@ -291,7 +408,6 @@ class BookingCalendar {
         document.querySelectorAll('.calendar-day.available').forEach(day => {
             day.addEventListener('click', (e) => {
                 if (window.innerWidth <= 768) {
-                    // Slight delay for mobile to avoid hover conflicts
                     setTimeout(() => {
                         this.selectedDate = e.currentTarget.dataset.date;
                         this.showBookingForm(this.selectedDate);
@@ -389,8 +505,9 @@ class ReviewsManager {
 
 // ==================== INQUIRY FORM HANDLER ====================
 class InquiryHandler {
-    constructor() {
+    constructor(notifier) {
         this.form = document.getElementById('quickInquiryForm');
+        this.notifier = notifier;
         this.setupListener();
     }
 
@@ -398,31 +515,62 @@ class InquiryHandler {
         this.form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const inquiry = {
-                name: document.getElementById('inquiryName').value,
-                email: document.getElementById('inquiryEmail').value,
-                phone: document.getElementById('inquiryPhone').value,
-                message: document.getElementById('inquiryMessage').value,
-                status: 'new',
-                createdAt: serverTimestamp()
-            };
+            // Validate form
+            const name = document.getElementById('inquiryName').value.trim();
+            const email = document.getElementById('inquiryEmail').value.trim();
+            const message = document.getElementById('inquiryMessage').value.trim();
+
+            if (!name || !email || !message) {
+                this.notifier.show('Please fill in all required fields', 'error');
+                return;
+            }
+
+            if (!this.isValidEmail(email)) {
+                this.notifier.show('Please enter a valid email address', 'error');
+                return;
+            }
+
+            const submitButton = this.form.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
 
             try {
+                const inquiry = {
+                    name: name,
+                    email: email,
+                    phone: document.getElementById('inquiryPhone').value.trim() || '',
+                    message: message,
+                    status: 'new',
+                    createdAt: serverTimestamp()
+                };
+
                 await addDoc(collection(db, 'inquiries'), inquiry);
-                alert('Thank you! Your inquiry has been sent. We\'ll contact you soon.');
+                
+                this.notifier.show('Thank you! Your inquiry has been sent. We\'ll contact you soon.', 'success');
                 this.form.reset();
+                
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error sending inquiry. Please try again.');
+                console.error('Error sending inquiry:', error);
+                this.notifier.show('Error sending inquiry. Please try again.', 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
             }
         });
+    }
+
+    isValidEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
     }
 }
 
 // ==================== BOOKING FORM HANDLER ====================
 class BookingHandler {
-    constructor() {
+    constructor(notifier) {
         this.form = document.getElementById('bookingForm');
+        this.notifier = notifier;
         this.setupListener();
         this.loadPackages();
     }
@@ -431,30 +579,73 @@ class BookingHandler {
         this.form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const booking = {
-                date: document.getElementById('selectedDate').value,
-                time: document.getElementById('timeSlot').value,
-                packageId: document.getElementById('packageSelect').value,
-                packageName: document.getElementById('packageSelect').selectedOptions[0]?.text,
-                name: document.getElementById('bookingName').value,
-                email: document.getElementById('bookingEmail').value,
-                phone: document.getElementById('bookingPhone').value,
-                eventType: document.getElementById('eventType').value,
-                specialRequests: document.getElementById('specialRequests').value,
-                status: 'pending',
-                createdAt: serverTimestamp()
-            };
+            // Validate form
+            const name = document.getElementById('bookingName').value.trim();
+            const email = document.getElementById('bookingEmail').value.trim();
+            const phone = document.getElementById('bookingPhone').value.trim();
+            const date = document.getElementById('selectedDate').value;
+            const time = document.getElementById('timeSlot').value;
+            const packageId = document.getElementById('packageSelect').value;
+
+            if (!name || !email || !phone || !date || !time || !packageId) {
+                this.notifier.show('Please fill in all required fields', 'error');
+                return;
+            }
+
+            if (!this.isValidEmail(email)) {
+                this.notifier.show('Please enter a valid email address', 'error');
+                return;
+            }
+
+            if (!this.isValidPhone(phone)) {
+                this.notifier.show('Please enter a valid phone number', 'error');
+                return;
+            }
+
+            const submitButton = this.form.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Booking...';
 
             try {
+                const booking = {
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    date: date,
+                    time: time,
+                    packageId: packageId,
+                    packageName: document.getElementById('packageSelect').selectedOptions[0]?.text || '',
+                    eventType: document.getElementById('eventType').value.trim() || '',
+                    specialRequests: document.getElementById('specialRequests').value.trim() || '',
+                    status: 'pending',
+                    createdAt: serverTimestamp()
+                };
+
                 await addDoc(collection(db, 'bookings'), booking);
-                alert('Booking confirmed! We\'ll send you a confirmation email.');
+                
+                this.notifier.show('Booking confirmed! We\'ll send you a confirmation email.', 'success');
                 this.form.reset();
                 document.getElementById('bookingFormWrapper').style.display = 'none';
+                
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error creating booking. Please try again.');
+                console.error('Error creating booking:', error);
+                this.notifier.show('Error creating booking. Please try again.', 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
             }
         });
+    }
+
+    isValidEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    isValidPhone(phone) {
+        const re = /^[\d\s\+\-\(\)]{10,}$/;
+        return re.test(phone);
     }
 
     async loadPackages() {
@@ -509,7 +700,6 @@ class BackToTop {
             });
         });
 
-        // Touch optimization
         this.button.addEventListener('touchstart', (e) => {
             e.preventDefault();
             window.scrollTo({
@@ -535,28 +725,24 @@ class MobileMenu {
                 this.toggleMenu();
             });
 
-            // Close menu when clicking on a link
             this.navMenu.querySelectorAll('a').forEach(link => {
                 link.addEventListener('click', () => {
                     this.closeMenu();
                 });
             });
 
-            // Close menu on window resize if open
             window.addEventListener('resize', () => {
                 if (window.innerWidth > 968 && this.navMenu.classList.contains('active')) {
                     this.closeMenu();
                 }
             });
 
-            // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!this.navMenu.contains(e.target) && !this.menuToggle.contains(e.target) && this.navMenu.classList.contains('active')) {
                     this.closeMenu();
                 }
             });
 
-            // Prevent scroll when menu is open
             this.navMenu.addEventListener('touchmove', (e) => {
                 if (this.navMenu.classList.contains('active')) {
                     e.stopPropagation();
@@ -569,7 +755,6 @@ class MobileMenu {
         this.navMenu.classList.toggle('active');
         this.body.classList.toggle('menu-open');
         
-        // Update icon
         const icon = this.menuToggle.querySelector('i');
         if (this.navMenu.classList.contains('active')) {
             icon.className = 'fas fa-times';
@@ -626,7 +811,6 @@ window.selectPackage = (packageId, packageName) => {
     const bookSection = document.getElementById('book');
     bookSection.scrollIntoView({ behavior: 'smooth' });
     
-    // Small delay for mobile to ensure scroll completes
     setTimeout(() => {
         const bookingForm = document.getElementById('bookingFormWrapper');
         if (bookingForm) {
@@ -637,14 +821,17 @@ window.selectPackage = (packageId, packageName) => {
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', async () => {
+    // Create notification system first
+    const notifier = new NotificationPopup();
+    
     // Initialize all components
     const settings = new SiteSettings();
     const fbFeed = new FacebookFeed();
     const packages = new PackagesManager();
     const calendar = new BookingCalendar();
     const reviews = new ReviewsManager();
-    const inquiryHandler = new InquiryHandler();
-    const bookingHandler = new BookingHandler();
+    const inquiryHandler = new InquiryHandler(notifier);
+    const bookingHandler = new BookingHandler(notifier);
     const backToTop = new BackToTop();
     const mobileMenu = new MobileMenu();
     const navHighlight = new ActiveNavHighlight();
