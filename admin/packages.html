@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packages Management - Shane Photography Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SHANE</h2>
+                <p>Photography Admin</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                <a href="inquiries.html"><i class="fas fa-inbox"></i> Inquiries</a>
+                <a href="bookings.html"><i class="fas fa-calendar-alt"></i> Bookings</a>
+                <a href="packages.html" class="active"><i class="fas fa-box"></i> Packages</a>
+                <a href="reviews.html"><i class="fas fa-star"></i> Reviews</a>
+                <a href="feed-sync.html"><i class="fab fa-facebook"></i> Facebook Feed</a>
+                <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Package Management</h1>
+                <div class="admin-profile">
+                    <span>Welcome, Admin</span>
+                    <img src="https://ui-avatars.com/api/?name=Shane+Admin&background=f5b342&color=0b0b0b&size=128" alt="Admin">
+                </div>
+            </header>
+
+            <!-- Action Bar -->
+            <div class="filters-bar">
+                <button class="btn-primary" onclick="openCreateModal()">
+                    <i class="fas fa-plus"></i> Create New Package
+                </button>
+                <select class="filter-select" id="categoryFilter">
+                    <option value="all">All Categories</option>
+                    <option value="Wedding">Wedding</option>
+                    <option value="Engagement">Engagement</option>
+                    <option value="Pre-Wedding">Pre-Wedding</option>
+                    <option value="Portrait">Portrait</option>
+                    <option value="Event">Event</option>
+                </select>
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+
+            <!-- Packages Grid -->
+            <div class="packages-grid" id="packagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+                <!-- Packages will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Package Modal -->
+    <div class="modal" id="packageModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <button class="modal-close" onclick="closeModal('packageModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;" id="modalTitle">Create New Package</h3>
+            
+            <form id="packageForm">
+                <input type="hidden" id="packageId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Package Name</label>
+                        <input type="text" id="packageName" required placeholder="e.g., Wedding Gold">
+                    </div>
+                    <div class="form-group">
+                        <label>Price (LKR)</label>
+                        <input type="number" id="packagePrice" required placeholder="150000">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="packageCategory" required>
+                            <option value="Wedding">Wedding</option>
+                            <option value="Engagement">Engagement</option>
+                            <option value="Pre-Wedding">Pre-Wedding</option>
+                            <option value="Portrait">Portrait</option>
+                            <option value="Event">Event</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration (hours)</label>
+                        <input type="number" id="packageDuration" placeholder="8">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="packageDescription" rows="3" placeholder="Package description..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Features (one per line)</label>
+                    <textarea id="packageFeatures" rows="5" placeholder="8 Hours Coverage&#10;2 Photographers&#10;300+ Edited Photos&#10;Photo Album"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="packageStatus">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Popular Package</label>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+                            <input type="checkbox" id="packagePopular" style="width: 20px; height: 20px;">
+                            <label style="margin: 0;">Mark as popular</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Package Image</label>
+                    <input type="file" id="packageImage" accept="image/*">
+                    <div class="image-preview" id="imagePreview">
+                        <i class="fas fa-image"></i>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1;">
+                        <i class="fas fa-save"></i> Save Package
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('packageModal')" style="flex: 1;">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('deleteModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--danger); margin-bottom: 1rem;">Delete Package</h3>
+            <p style="color: var(--gray); margin-bottom: 2rem;">Are you sure you want to delete this package? This action cannot be undone.</p>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-secondary" onclick="closeModal('deleteModal')" style="flex: 1;">Cancel</button>
+                <button class="btn-danger" onclick="confirmDeletePackage()" style="flex: 1;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, storage } from '../js/firebase-config.js';
+        import { 
+            collection, query, getDocs, doc, addDoc, updateDoc, deleteDoc, where 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        let currentPackageId = null;
+
+        // Load packages
+        async function loadPackages() {
+            try {
+                const grid = document.getElementById('packagesGrid');
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;"><div class="spinner"></div><p>Loading packages...</p></div>';
+
+                let constraints = [];
+                
+                // Apply filters
+                const category = document.getElementById('categoryFilter').value;
+                const status = document.getElementById('statusFilter').value;
+                
+                if (category !== 'all') {
+                    constraints.push(where('category', '==', category));
+                }
+                if (status !== 'all') {
+                    constraints.push(where('active', '==', status === 'active'));
+                }
+
+                const q = query(collection(db, 'packages'), ...constraints);
+                const snapshot = await getDocs(q);
+                
+                if (snapshot.empty) {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;">No packages found. Create your first package!</div>';
+                    return;
+                }
+
+                grid.innerHTML = snapshot.docs.map(doc => {
+                    const p = doc.data();
+                    return `
+                        <div class="package-card" style="background: var(--dark-light); border-radius: 25px; overflow: hidden; border: 1px solid ${p.active ? 'var(--primary)' : '#333'};">
+                            <div style="height: 200px; background: var(--dark-lighter); display: flex; align-items: center; justify-content: center;">
+                                ${p.imageUrl ? 
+                                    `<img src="${p.imageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : 
+                                    '<i class="fas fa-camera" style="font-size: 4rem; color: var(--gray);"></i>'
+                                }
+                            </div>
+                            <div style="padding: 1.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <h3 style="color: var(--primary);">${p.name}</h3>
+                                    ${p.popular ? '<span class="status-badge" style="background: var(--primary); color: var(--dark);">Popular</span>' : ''}
+                                </div>
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--light); margin-bottom: 1rem;">
+                                    LKR ${p.price?.toLocaleString()}
+                                </div>
+                                <p style="color: var(--gray); margin-bottom: 1rem;">${p.description || ''}</p>
+                                <div style="margin-bottom: 1rem;">
+                                    ${p.features ? p.features.map(f => `
+                                        <div style="padding: 0.3rem 0;"><i class="fas fa-check" style="color: var(--primary); margin-right: 0.5rem;"></i> ${f}</div>
+                                    `).join('') : ''}
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                                    <button class="btn-icon" onclick="editPackage('${doc.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" onclick="togglePackageStatus('${doc.id}', ${p.active})" title="${p.active ? 'Deactivate' : 'Activate'}">
+                                        <i class="fas fa-power-off"></i>
+                                    </button>
+                                    <button class="btn-icon" onclick="deletePackage('${doc.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    <span class="status-badge ${p.active ? 'active' : 'inactive'}" style="margin-left: auto;">
+                                        ${p.active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading packages:', error);
+                document.getElementById('packagesGrid').innerHTML = 
+                    '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--danger);">Error loading packages</div>';
+            }
+        }
+
+        // Create/Update package
+        window.openCreateModal = () => {
+            document.getElementById('modalTitle').textContent = 'Create New Package';
+            document.getElementById('packageForm').reset();
+            document.getElementById('packageId').value = '';
+            document.getElementById('imagePreview').innerHTML = '<i class="fas fa-image"></i>';
+            openModal('packageModal');
+        };
+
+        window.editPackage = async (id) => {
+            currentPackageId = id;
+            const docRef = doc(db, 'packages', id);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const p = docSnap.data();
+                document.getElementById('modalTitle').textContent = 'Edit Package';
+                document.getElementById('packageId').value = id;
+                document.getElementById('packageName').value = p.name || '';
+                document.getElementById('packagePrice').value = p.price || '';
+                document.getElementById('packageCategory').value = p.category || 'Wedding';
+                document.getElementById('packageDuration').value = p.duration || '';
+                document.getElementById('packageDescription').value = p.description || '';
+                document.getElementById('packageFeatures').value = p.features ? p.features.join('\n') : '';
+                document.getElementById('packageStatus').value = p.active ? 'active' : 'inactive';
+                document.getElementById('packagePopular').checked = p.popular || false;
+                
+                if (p.imageUrl) {
+                    document.getElementById('imagePreview').innerHTML = `<img src="${p.imageUrl}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                }
+                
+                openModal('packageModal');
+            }
+        };
+
+        // Handle form submission
+        document.getElementById('packageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const packageData = {
+                name: document.getElementById('packageName').value,
+                price: parseFloat(document.getElementById('packagePrice').value),
+                category: document.getElementById('packageCategory').value,
+                duration: parseInt(document.getElementById('packageDuration').value) || null,
+                description: document.getElementById('packageDescription').value,
+                features: document.getElementById('packageFeatures').value.split('\n').filter(f => f.trim()),
+                active: document.getElementById('packageStatus').value === 'active',
+                popular: document.getElementById('packagePopular').checked,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                const packageId = document.getElementById('packageId').value;
+                
+                // Handle image upload
+                const imageFile = document.getElementById('packageImage').files[0];
+                if (imageFile) {
+                    const storageRef = ref(storage, `packages/${Date.now()}_${imageFile.name}`);
+                    await uploadBytes(storageRef, imageFile);
+                    packageData.imageUrl = await getDownloadURL(storageRef);
+                }
+
+                if (packageId) {
+                    // Update
+                    await updateDoc(doc(db, 'packages', packageId), packageData);
+                    alert('Package updated successfully!');
+                } else {
+                    // Create
+                    packageData.createdAt = new Date().toISOString();
+                    await addDoc(collection(db, 'packages'), packageData);
+                    alert('Package created successfully!');
+                }
+
+                closeModal('packageModal');
+                loadPackages();
+                
+            } catch (error) {
+                console.error('Error saving package:', error);
+                alert('Error saving package: ' + error.message);
+            }
+        });
+
+        window.togglePackageStatus = async (id, currentStatus) => {
+            await updateDoc(doc(db, 'packages', id), { active: !currentStatus });
+            loadPackages();
+        };
+
+        window.deletePackage = (id) => {
+            currentPackageId = id;
+            openModal('deleteModal');
+        };
+
+        window.confirmDeletePackage = async () => {
+            await deleteDoc(doc(db, 'packages', currentPackageId));
+            closeModal('deleteModal');
+            loadPackages();
+        };
+
+        // Filter handlers
+        document.getElementById('categoryFilter').addEventListener('change', loadPackages);
+        document.getElementById('statusFilter').addEventListener('change', loadPackages);
+
+        // Modal functions
+        window.openModal = (modalId) => {
+            document.getElementById(modalId).classList.add('active');
+        };
+
+        window.closeModal = (modalId) => {
+            document.getElementById(modalId).classList.remove('active');
+        };
+
+        // Image preview
+        document.getElementById('packageImage').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Initial load
+        loadPackages();
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>
