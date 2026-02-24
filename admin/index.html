@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Shane Photography</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SHANE</h2>
+                <p>Photography Admin</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="active"><i class="fas fa-dashboard"></i> Dashboard</a>
+                <a href="inquiries.html"><i class="fas fa-inbox"></i> Inquiries</a>
+                <a href="bookings.html"><i class="fas fa-calendar"></i> Bookings</a>
+                <a href="packages.html"><i class="fas fa-box"></i> Packages</a>
+                <a href="reviews.html"><i class="fas fa-star"></i> Reviews</a>
+                <a href="feed-sync.html"><i class="fas fa-facebook"></i> Facebook Feed</a>
+                <a href="settings.html"><i class="fas fa-gear"></i> Settings</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Dashboard</h1>
+                <div class="admin-profile">
+                    <span>Admin</span>
+                    <img src="../assets/images/admin-avatar.jpg" alt="Admin">
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-inbox"></i></div>
+                    <div class="stat-details">
+                        <h3 id="newInquiriesCount">0</h3>
+                        <p>New Inquiries</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                    <div class="stat-details">
+                        <h3 id="todayBookings">0</h3>
+                        <p>Today's Bookings</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-details">
+                        <h3 id="pendingBookings">0</h3>
+                        <p>Pending Bookings</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-details">
+                        <h3 id="totalClients">0</h3>
+                        <p>Total Clients</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Inquiries -->
+            <div class="recent-section">
+                <h2>Recent Inquiries</h2>
+                <div class="table-responsive">
+                    <table class="data-table" id="recentInquiries">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Filled by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Upcoming Bookings -->
+            <div class="recent-section">
+                <h2>Upcoming Bookings</h2>
+                <div class="table-responsive">
+                    <table class="data-table" id="upcomingBookings">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Package</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Filled by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="../js/admin.js"></script>
+</body>
+</html>
