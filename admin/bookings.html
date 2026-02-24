@@ -39,12 +39,18 @@
             cursor: pointer;
             transition: var(--transition);
             border: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .calendar-day:hover {
             border-color: var(--primary);
+            transform: scale(1.02);
         }
         .calendar-day.has-bookings {
             background: rgba(245, 179, 66, 0.2);
+            border-color: var(--primary);
         }
         .calendar-day.today {
             border: 2px solid var(--primary);
@@ -52,7 +58,29 @@
         .booking-count {
             font-size: 0.8rem;
             color: var(--primary);
-            margin-top: 0.2rem;
+            font-weight: 600;
+        }
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-item {
+            background: var(--dark-light);
+            padding: 1.5rem;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .stat-label {
+            color: var(--gray);
+            margin-top: 0.5rem;
         }
     </style>
 </head>
@@ -88,16 +116,36 @@
                 </div>
             </header>
 
+            <!-- Stats Summary -->
+            <div class="stats-summary" id="statsSummary">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalBookings">0</div>
+                    <div class="stat-label">Total Bookings</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="pendingBookings">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="confirmedBookings">0</div>
+                    <div class="stat-label">Confirmed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="completedBookings">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+
             <!-- View Toggle -->
-            <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+            <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
                 <button class="btn-primary" onclick="showCalendarView()">
                     <i class="fas fa-calendar"></i> Calendar View
                 </button>
                 <button class="btn-secondary" onclick="showListView()">
                     <i class="fas fa-list"></i> List View
                 </button>
-                <button class="btn-secondary" onclick="openCreateSlotModal()" style="margin-left: auto;">
-                    <i class="fas fa-plus"></i> Add Time Slot
+                <button class="btn-secondary" onclick="openCreateBookingModal()" style="margin-left: auto;">
+                    <i class="fas fa-plus"></i> Create Booking
                 </button>
             </div>
 
@@ -113,7 +161,7 @@
                 </div>
             </div>
 
-            <!-- List View (hidden by default) -->
+            <!-- List View -->
             <div id="listView" style="display: none;">
                 <!-- Filters -->
                 <div class="filters-bar">
@@ -129,10 +177,16 @@
                         <option value="cancelled">Cancelled</option>
                     </select>
                     <select class="filter-select" id="bookingDateFilter">
+                        <option value="all">All Dates</option>
                         <option value="upcoming">Upcoming</option>
                         <option value="past">Past</option>
-                        <option value="all">All Dates</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
                     </select>
+                    <button class="btn-secondary" onclick="exportBookings()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
                 </div>
 
                 <!-- Bookings Table -->
@@ -141,63 +195,74 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
+                                    <th><input type="checkbox" id="selectAll"></th>
                                     <th>Client</th>
                                     <th>Date</th>
                                     <th>Time</th>
                                     <th>Package</th>
                                     <th>Event Type</th>
                                     <th>Status</th>
+                                    <th>Created</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="bookingsTableBody">
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 3rem;">
+                                    <td colspan="9" style="text-align: center; padding: 3rem;">
                                         <div class="spinner"></div>
+                                        <p style="margin-top: 1rem;">Loading bookings...</p>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination" id="bookingsPagination"></div>
                 </div>
             </div>
 
             <!-- Time Slot Management -->
             <div class="recent-section" style="margin-top: 2rem;">
-                <h2>Available Time Slots</h2>
-                <div id="timeSlotsList" class="time-slots-grid">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Available Time Slots</h2>
+                    <button class="btn-primary" onclick="openCreateSlotModal()">
+                        <i class="fas fa-plus"></i> Add Time Slots
+                    </button>
+                </div>
+                <div id="timeSlotsList" class="time-slots-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
                     <!-- Time slots will be loaded here -->
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Create Booking Modal -->
+    <!-- Create/Edit Booking Modal -->
     <div class="modal" id="bookingModal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 700px;">
             <button class="modal-close" onclick="closeModal('bookingModal')">
                 <i class="fas fa-times"></i>
             </button>
-            <h3 style="color: var(--primary); margin-bottom: 1.5rem;" id="bookingModalTitle">Create Booking</h3>
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;" id="bookingModalTitle">Create New Booking</h3>
             
             <form id="bookingForm">
                 <input type="hidden" id="bookingId">
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Client Name</label>
-                        <input type="text" id="bookingClientName" required>
+                        <label>Client Name *</label>
+                        <input type="text" id="bookingClientName" required placeholder="Full name">
                     </div>
                     <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="bookingClientEmail" required>
+                        <label>Email *</label>
+                        <input type="email" id="bookingClientEmail" required placeholder="client@email.com">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Phone</label>
-                        <input type="tel" id="bookingClientPhone" required>
+                        <label>Phone *</label>
+                        <input type="tel" id="bookingClientPhone" required placeholder="076 382 3355">
                     </div>
                     <div class="form-group">
                         <label>Event Type</label>
@@ -207,11 +272,11 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Date</label>
+                        <label>Date *</label>
                         <input type="date" id="bookingDate" required>
                     </div>
                     <div class="form-group">
-                        <label>Time</label>
+                        <label>Time *</label>
                         <select id="bookingTime" required>
                             <option value="">Select time</option>
                             <option value="09:00">09:00 AM</option>
@@ -224,31 +289,36 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Package</label>
-                    <select id="bookingPackage" required>
-                        <option value="">Select package</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="bookingStatus">
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Package *</label>
+                        <select id="bookingPackage" required>
+                            <option value="">Select package</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="bookingStatus">
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label>Special Requests</label>
-                    <textarea id="bookingNotes" rows="3"></textarea>
+                    <textarea id="bookingNotes" rows="3" placeholder="Any special requirements..."></textarea>
                 </div>
 
                 <div style="display: flex; gap: 1rem;">
-                    <button type="submit" class="btn-primary" style="flex: 1;">Save Booking</button>
-                    <button type="button" class="btn-secondary" onclick="closeModal('bookingModal')" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn-primary" style="flex: 1;">
+                        <i class="fas fa-save"></i> Save Booking
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('bookingModal')" style="flex: 1;">
+                        Cancel
+                    </button>
                 </div>
             </form>
         </div>
@@ -256,66 +326,168 @@
 
     <!-- Create Time Slot Modal -->
     <div class="modal" id="timeSlotModal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 500px;">
             <button class="modal-close" onclick="closeModal('timeSlotModal')">
                 <i class="fas fa-times"></i>
             </button>
-            <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Add Time Slots</h3>
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Add Available Time Slots</h3>
             
             <form id="timeSlotForm">
                 <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" id="slotDate" required>
+                    <label>Date *</label>
+                    <input type="date" id="slotDate" required min="<?php echo date('Y-m-d'); ?>">
                 </div>
                 
                 <div class="form-group">
-                    <label>Select Time Slots</label>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
-                        <label><input type="checkbox" value="09:00"> 09:00 AM</label>
-                        <label><input type="checkbox" value="10:00"> 10:00 AM</label>
-                        <label><input type="checkbox" value="11:00"> 11:00 AM</label>
-                        <label><input type="checkbox" value="14:00"> 02:00 PM</label>
-                        <label><input type="checkbox" value="15:00"> 03:00 PM</label>
-                        <label><input type="checkbox" value="16:00"> 04:00 PM</label>
+                    <label>Select Time Slots *</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; background: var(--dark-lighter); padding: 1.5rem; border-radius: 20px;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" value="09:00"> 09:00 AM
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" value="10:00"> 10:00 AM
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" value="11:00"> 11:00 AM
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" value="14:00"> 02:00 PM
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" value="15:00"> 03:00 PM
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" value="16:00"> 04:00 PM
+                        </label>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary btn-block">Add Slots</button>
+                <div class="form-group">
+                    <label>Recurring?</label>
+                    <select id="slotRecurring">
+                        <option value="none">One time only</option>
+                        <option value="weekly">Every week</option>
+                        <option value="weekdays">Weekdays only</option>
+                        <option value="weekends">Weekends only</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1;">
+                        <i class="fas fa-plus"></i> Add Slots
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('timeSlotModal')" style="flex: 1;">
+                        Cancel
+                    </button>
+                </div>
             </form>
+        </div>
+    </div>
+
+    <!-- View Booking Modal -->
+    <div class="modal" id="viewBookingModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="closeModal('viewBookingModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Booking Details</h3>
+            
+            <div id="bookingDetails" style="background: var(--dark-lighter); padding: 2rem; border-radius: 20px;">
+                <!-- Details will be populated by JS -->
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="btn-primary" style="flex: 1;" onclick="editCurrentBooking()">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn-danger" style="flex: 1;" onclick="deleteCurrentBooking()">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <button class="modal-close" onclick="closeModal('deleteModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--danger); margin-bottom: 1rem;">Confirm Delete</h3>
+            <p style="color: var(--gray); margin-bottom: 2rem;">Are you sure you want to delete this booking? This action cannot be undone.</p>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-secondary" onclick="closeModal('deleteModal')" style="flex: 1;">Cancel</button>
+                <button class="btn-danger" onclick="confirmDelete()" style="flex: 1;">Delete</button>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { db } from '../js/firebase-config.js';
         import { 
-            collection, query, getDocs, doc, addDoc, updateDoc, deleteDoc, where, orderBy 
+            collection, query, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, where, orderBy, Timestamp 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // State
-        let currentMonth = new Date();
+        // ==================== STATE MANAGEMENT ====================
         let currentBookings = [];
+        let filteredBookings = [];
         let currentView = 'calendar';
+        let currentMonth = new Date();
+        let currentBookingId = null;
+        let currentPage = 1;
+        const itemsPerPage = 10;
 
-        // Initialize
+        // ==================== INITIALIZATION ====================
+        async function initialize() {
+            await loadBookings();
+            await loadPackagesSelect();
+            await loadTimeSlots();
+        }
+
+        // ==================== LOAD BOOKINGS ====================
         async function loadBookings() {
             try {
-                const q = query(collection(db, 'bookings'), orderBy('date', 'asc'), orderBy('time', 'asc'));
+                console.log('Loading bookings from Firebase...');
+                const q = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(q);
-                currentBookings = snapshot.docs;
                 
+                currentBookings = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                console.log('Loaded bookings:', currentBookings.length);
+                
+                // Update stats
+                updateStats();
+                
+                // Render based on current view
                 if (currentView === 'calendar') {
                     renderCalendar();
                 } else {
-                    renderBookingsList();
+                    applyFilters();
                 }
                 
-                loadTimeSlots();
             } catch (error) {
                 console.error('Error loading bookings:', error);
+                showNotification('Error loading bookings: ' + error.message, 'error');
             }
         }
 
-        // Calendar View
+        // ==================== UPDATE STATISTICS ====================
+        function updateStats() {
+            const total = currentBookings.length;
+            const pending = currentBookings.filter(b => b.status === 'pending').length;
+            const confirmed = currentBookings.filter(b => b.status === 'confirmed').length;
+            const completed = currentBookings.filter(b => b.status === 'completed').length;
+            
+            document.getElementById('totalBookings').textContent = total;
+            document.getElementById('pendingBookings').textContent = pending;
+            document.getElementById('confirmedBookings').textContent = confirmed;
+            document.getElementById('completedBookings').textContent = completed;
+        }
+
+        // ==================== CALENDAR VIEW ====================
         function renderCalendar() {
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth();
@@ -344,17 +516,18 @@
             
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
-                const dayBookings = currentBookings.filter(d => {
-                    const bookingDate = d.data().date;
-                    return bookingDate === dateStr;
-                });
+                const dayBookings = currentBookings.filter(b => b.date === dateStr);
                 
                 const isToday = new Date(year, month, day).toDateString() === today;
                 
                 calendarHTML += `
-                    <div class="calendar-day ${dayBookings.length ? 'has-bookings' : ''} ${isToday ? 'today' : ''}" onclick="showDateBookings('${dateStr}')">
+                    <div class="calendar-day ${dayBookings.length ? 'has-bookings' : ''} ${isToday ? 'today' : ''}" 
+                         onclick="showDateBookings('${dateStr}')">
                         <div style="font-weight: bold;">${day}</div>
-                        ${dayBookings.length ? `<div class="booking-count">${dayBookings.length} booking${dayBookings.length > 1 ? 's' : ''}</div>` : ''}
+                        ${dayBookings.length ? 
+                            `<div class="booking-count">${dayBookings.length} booking${dayBookings.length > 1 ? 's' : ''}</div>` : 
+                            ''
+                        }
                     </div>
                 `;
             }
@@ -362,54 +535,305 @@
             document.getElementById('calendarGrid').innerHTML = calendarHTML;
         }
 
-        // List View
-        async function renderBookingsList() {
+        // ==================== LIST VIEW ====================
+        function renderBookingsList(bookings) {
             const tbody = document.getElementById('bookingsTableBody');
             
-            if (currentBookings.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No bookings found</td></tr>';
+            if (!bookings || bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 3rem;">No bookings found</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = currentBookings.map(doc => {
-                const b = doc.data();
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageBookings = bookings.slice(start, end);
+
+            tbody.innerHTML = pageBookings.map(booking => {
+                const createdDate = booking.createdAt ? 
+                    (booking.createdAt.toDate ? 
+                        new Date(booking.createdAt.toDate()).toLocaleDateString() : 
+                        new Date(booking.createdAt).toLocaleDateString()
+                    ) : 'N/A';
+                
                 return `
                     <tr>
-                        <td><strong>${b.name}</strong></td>
-                        <td>${b.date || '-'}</td>
-                        <td>${b.time || '-'}</td>
-                        <td>${b.packageName || '-'}</td>
-                        <td>${b.eventType || '-'}</td>
-                        <td><span class="status-badge ${b.status || 'pending'}">${b.status || 'pending'}</span></td>
+                        <td><input type="checkbox" class="booking-checkbox" value="${booking.id}"></td>
+                        <td><strong>${booking.name || 'N/A'}</strong><br><small>${booking.email}</small></td>
+                        <td>${booking.date || '-'}</td>
+                        <td>${booking.time || '-'}</td>
+                        <td>${booking.packageName || '-'}</td>
+                        <td>${booking.eventType || '-'}</td>
                         <td>
-                            <button class="btn-icon" onclick="editBooking('${doc.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn-icon" onclick="updateBookingStatus('${doc.id}', '${b.status}')"><i class="fas fa-sync-alt"></i></button>
-                            <button class="btn-icon" onclick="deleteBooking('${doc.id}')"><i class="fas fa-trash"></i></button>
+                            <span class="status-badge ${booking.status || 'pending'}" 
+                                  onclick="changeBookingStatus('${booking.id}', '${booking.status || 'pending'}')">
+                                ${booking.status || 'pending'}
+                            </span>
+                        </td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <button class="btn-icon" onclick="viewBooking('${booking.id}')" title="View"><i class="fas fa-eye"></i></button>
+                            <button class="btn-icon" onclick="editBooking('${booking.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn-icon" onclick="deleteBooking('${booking.id}')" title="Delete"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             }).join('');
+
+            renderPagination(bookings.length);
         }
 
-        // Time Slots Management
-        async function loadTimeSlots() {
-            const slotsContainer = document.getElementById('timeSlotsList');
-            const q = query(collection(db, 'available_slots'), where('isBooked', '==', false), orderBy('date', 'asc'));
-            const snapshot = await getDocs(q);
+        // ==================== PAGINATION ====================
+        function renderPagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            let paginationHTML = '';
             
-            slotsContainer.innerHTML = snapshot.docs.map(doc => {
-                const slot = doc.data();
-                return `
-                    <div class="time-slot" onclick="bookTimeSlot('${doc.id}', '${slot.date}', '${slot.time}')">
-                        <div><strong>${slot.date}</strong></div>
-                        <div>${slot.time}</div>
-                        <small style="color: var(--gray);">Available</small>
-                    </div>
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHTML += `
+                    <div class="page-item ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</div>
                 `;
-            }).join('') || '<div style="grid-column: 1/-1; text-align: center;">No available slots</div>';
+            }
+            
+            document.getElementById('bookingsPagination').innerHTML = paginationHTML;
         }
 
-        // CRUD Operations
+        window.changePage = (page) => {
+            currentPage = page;
+            applyFilters();
+        };
+
+        // ==================== FILTERS ====================
+        function applyFilters() {
+            let filtered = [...currentBookings];
+            
+            // Status filter
+            const statusFilter = document.getElementById('bookingStatusFilter').value;
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(b => b.status === statusFilter);
+            }
+            
+            // Date filter
+            const dateFilter = document.getElementById('bookingDateFilter').value;
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (dateFilter === 'today') {
+                filtered = filtered.filter(b => b.date === today);
+            } else if (dateFilter === 'upcoming') {
+                filtered = filtered.filter(b => b.date >= today);
+            } else if (dateFilter === 'past') {
+                filtered = filtered.filter(b => b.date < today);
+            } else if (dateFilter === 'week') {
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                const weekEnd = nextWeek.toISOString().split('T')[0];
+                filtered = filtered.filter(b => b.date >= today && b.date <= weekEnd);
+            } else if (dateFilter === 'month') {
+                const nextMonth = new Date();
+                nextMonth.setMonth(nextMonth.getMonth() + 1);
+                const monthEnd = nextMonth.toISOString().split('T')[0];
+                filtered = filtered.filter(b => b.date >= today && b.date <= monthEnd);
+            }
+            
+            // Search filter
+            const searchTerm = document.getElementById('searchBooking').value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(b => 
+                    (b.name && b.name.toLowerCase().includes(searchTerm)) ||
+                    (b.email && b.email.toLowerCase().includes(searchTerm)) ||
+                    (b.phone && b.phone.includes(searchTerm))
+                );
+            }
+            
+            filteredBookings = filtered;
+            renderBookingsList(filtered);
+        }
+
+        // ==================== TIME SLOTS MANAGEMENT ====================
+        async function loadTimeSlots() {
+            try {
+                const slotsContainer = document.getElementById('timeSlotsList');
+                const q = query(collection(db, 'available_slots'), where('isBooked', '==', false), orderBy('date', 'asc'), limit(20));
+                const snapshot = await getDocs(q);
+                
+                if (snapshot.empty) {
+                    slotsContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;">No available slots</div>';
+                    return;
+                }
+
+                slotsContainer.innerHTML = snapshot.docs.map(doc => {
+                    const slot = doc.data();
+                    return `
+                        <div class="time-slot" onclick="bookTimeSlot('${doc.id}', '${slot.date}', '${slot.time}')">
+                            <div><strong>${slot.date}</strong></div>
+                            <div style="font-size: 1.2rem; color: var(--primary);">${slot.time}</div>
+                            <small style="color: var(--gray);">Click to book</small>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading time slots:', error);
+            }
+        }
+
+        // ==================== CRUD OPERATIONS ====================
+        window.openCreateBookingModal = () => {
+            document.getElementById('bookingModalTitle').textContent = 'Create New Booking';
+            document.getElementById('bookingForm').reset();
+            document.getElementById('bookingId').value = '';
+            document.getElementById('bookingStatus').value = 'pending';
+            document.getElementById('bookingDate').value = new Date().toISOString().split('T')[0];
+            openModal('bookingModal');
+        };
+
+        window.editBooking = async (id) => {
+            try {
+                const docRef = doc(db, 'bookings', id);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const b = docSnap.data();
+                    document.getElementById('bookingModalTitle').textContent = 'Edit Booking';
+                    document.getElementById('bookingId').value = id;
+                    document.getElementById('bookingClientName').value = b.name || '';
+                    document.getElementById('bookingClientEmail').value = b.email || '';
+                    document.getElementById('bookingClientPhone').value = b.phone || '';
+                    document.getElementById('bookingEventType').value = b.eventType || '';
+                    document.getElementById('bookingDate').value = b.date || '';
+                    document.getElementById('bookingTime').value = b.time || '';
+                    document.getElementById('bookingStatus').value = b.status || 'pending';
+                    document.getElementById('bookingNotes').value = b.specialRequests || '';
+                    
+                    // Load and select package
+                    await loadPackagesSelect();
+                    document.getElementById('bookingPackage').value = b.packageId || '';
+                    
+                    openModal('bookingModal');
+                }
+            } catch (error) {
+                console.error('Error loading booking:', error);
+                alert('Error loading booking details');
+            }
+        };
+
+        window.viewBooking = async (id) => {
+            try {
+                const docRef = doc(db, 'bookings', id);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const b = docSnap.data();
+                    const createdDate = b.createdAt ? 
+                        (b.createdAt.toDate ? 
+                            new Date(b.createdAt.toDate()).toLocaleString() : 
+                            new Date(b.createdAt).toLocaleString()
+                        ) : 'N/A';
+                    
+                    document.getElementById('bookingDetails').innerHTML = `
+                        <div style="display: grid; gap: 1rem;">
+                            <div><strong>Name:</strong> ${b.name || 'N/A'}</div>
+                            <div><strong>Email:</strong> ${b.email || 'N/A'}</div>
+                            <div><strong>Phone:</strong> ${b.phone || 'N/A'}</div>
+                            <div><strong>Date:</strong> ${b.date || 'N/A'}</div>
+                            <div><strong>Time:</strong> ${b.time || 'N/A'}</div>
+                            <div><strong>Package:</strong> ${b.packageName || 'N/A'}</div>
+                            <div><strong>Event Type:</strong> ${b.eventType || 'N/A'}</div>
+                            <div><strong>Status:</strong> <span class="status-badge ${b.status || 'pending'}">${b.status || 'pending'}</span></div>
+                            <div><strong>Special Requests:</strong> ${b.specialRequests || 'None'}</div>
+                            <div><strong>Created:</strong> ${createdDate}</div>
+                        </div>
+                    `;
+                    currentBookingId = id;
+                    openModal('viewBookingModal');
+                }
+            } catch (error) {
+                console.error('Error viewing booking:', error);
+            }
+        };
+
+        window.editCurrentBooking = () => {
+            closeModal('viewBookingModal');
+            editBooking(currentBookingId);
+        };
+
+        window.deleteCurrentBooking = () => {
+            closeModal('viewBookingModal');
+            deleteBooking(currentBookingId);
+        };
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const bookingData = {
+                name: document.getElementById('bookingClientName').value.trim(),
+                email: document.getElementById('bookingClientEmail').value.trim(),
+                phone: document.getElementById('bookingClientPhone').value.trim(),
+                eventType: document.getElementById('bookingEventType').value.trim(),
+                date: document.getElementById('bookingDate').value,
+                time: document.getElementById('bookingTime').value,
+                packageId: document.getElementById('bookingPackage').value,
+                packageName: document.getElementById('bookingPackage').selectedOptions[0]?.text,
+                status: document.getElementById('bookingStatus').value,
+                specialRequests: document.getElementById('bookingNotes').value.trim(),
+                updatedAt: new Date().toISOString()
+            };
+
+            const bookingId = document.getElementById('bookingId').value;
+            
+            try {
+                if (bookingId) {
+                    await updateDoc(doc(db, 'bookings', bookingId), bookingData);
+                    showNotification('Booking updated successfully!', 'success');
+                } else {
+                    bookingData.createdAt = new Date().toISOString();
+                    await addDoc(collection(db, 'bookings'), bookingData);
+                    showNotification('Booking created successfully!', 'success');
+                }
+                
+                closeModal('bookingModal');
+                await loadBookings();
+                
+            } catch (error) {
+                console.error('Error saving booking:', error);
+                showNotification('Error saving booking: ' + error.message, 'error');
+            }
+        });
+
+        window.deleteBooking = (id) => {
+            currentBookingId = id;
+            openModal('deleteModal');
+        };
+
+        window.confirmDelete = async () => {
+            try {
+                await deleteDoc(doc(db, 'bookings', currentBookingId));
+                showNotification('Booking deleted successfully!', 'success');
+                closeModal('deleteModal');
+                await loadBookings();
+            } catch (error) {
+                console.error('Error deleting booking:', error);
+                showNotification('Error deleting booking', 'error');
+            }
+        };
+
+        window.changeBookingStatus = async (id, currentStatus) => {
+            const statuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+            const newStatus = prompt(`Change status from "${currentStatus}" to:`, currentStatus);
+            
+            if (newStatus && statuses.includes(newStatus)) {
+                try {
+                    await updateDoc(doc(db, 'bookings', id), { 
+                        status: newStatus,
+                        updatedAt: new Date().toISOString()
+                    });
+                    showNotification(`Status changed to ${newStatus}`, 'success');
+                    await loadBookings();
+                } catch (error) {
+                    console.error('Error updating status:', error);
+                }
+            }
+        };
+
+        // ==================== TIME SLOT OPERATIONS ====================
         window.openCreateSlotModal = () => {
             document.getElementById('slotDate').value = new Date().toISOString().split('T')[0];
             openModal('timeSlotModal');
@@ -421,124 +845,103 @@
             const date = document.getElementById('slotDate').value;
             const selectedTimes = Array.from(document.querySelectorAll('#timeSlotForm input[type="checkbox"]:checked'))
                 .map(cb => cb.value);
+            const recurring = document.getElementById('slotRecurring').value;
             
-            for (const time of selectedTimes) {
-                await addDoc(collection(db, 'available_slots'), {
-                    date: date,
-                    time: time,
-                    isBooked: false,
-                    createdAt: new Date().toISOString()
+            if (selectedTimes.length === 0) {
+                alert('Please select at least one time slot');
+                return;
+            }
+
+            let slotsToAdd = [];
+
+            if (recurring === 'none') {
+                // Add single date slots
+                selectedTimes.forEach(time => {
+                    slotsToAdd.push({
+                        date: date,
+                        time: time,
+                        isBooked: false,
+                        createdAt: new Date().toISOString()
+                    });
                 });
+            } else {
+                // Add recurring slots for next 4 weeks
+                const startDate = new Date(date);
+                for (let week = 0; week < 4; week++) {
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + (week * 7));
+                    
+                    // Check if it's weekday/weekend based on selection
+                    const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
+                    
+                    if (recurring === 'weekdays' && (dayOfWeek === 0 || dayOfWeek === 6)) continue;
+                    if (recurring === 'weekends' && dayOfWeek !== 0 && dayOfWeek !== 6) continue;
+                    
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    selectedTimes.forEach(time => {
+                        slotsToAdd.push({
+                            date: dateStr,
+                            time: time,
+                            isBooked: false,
+                            createdAt: new Date().toISOString(),
+                            recurring: recurring
+                        });
+                    });
+                }
             }
             
-            closeModal('timeSlotModal');
-            loadTimeSlots();
+            try {
+                for (const slot of slotsToAdd) {
+                    await addDoc(collection(db, 'available_slots'), slot);
+                }
+                
+                showNotification(`Added ${slotsToAdd.length} time slots!`, 'success');
+                closeModal('timeSlotModal');
+                loadTimeSlots();
+                
+            } catch (error) {
+                console.error('Error adding slots:', error);
+                showNotification('Error adding slots', 'error');
+            }
         });
 
         window.bookTimeSlot = (slotId, date, time) => {
             document.getElementById('bookingDate').value = date;
             document.getElementById('bookingTime').value = time;
-            document.getElementById('bookingModalTitle').textContent = 'Create Booking';
+            document.getElementById('bookingModalTitle').textContent = 'Create Booking from Slot';
             document.getElementById('bookingForm').reset();
             document.getElementById('bookingId').value = '';
+            document.getElementById('bookingStatus').value = 'pending';
             openModal('bookingModal');
         };
 
-        window.editBooking = async (id) => {
-            const docRef = doc(db, 'bookings', id);
-            const docSnap = await getDoc(docRef);
-            
-            if (docSnap.exists()) {
-                const b = docSnap.data();
-                document.getElementById('bookingModalTitle').textContent = 'Edit Booking';
-                document.getElementById('bookingId').value = id;
-                document.getElementById('bookingClientName').value = b.name || '';
-                document.getElementById('bookingClientEmail').value = b.email || '';
-                document.getElementById('bookingClientPhone').value = b.phone || '';
-                document.getElementById('bookingEventType').value = b.eventType || '';
-                document.getElementById('bookingDate').value = b.date || '';
-                document.getElementById('bookingTime').value = b.time || '';
-                document.getElementById('bookingStatus').value = b.status || 'pending';
-                document.getElementById('bookingNotes').value = b.specialRequests || '';
-                
-                // Load and select package
-                await loadPackagesSelect();
-                document.getElementById('bookingPackage').value = b.packageId || '';
-                
-                openModal('bookingModal');
-            }
-        };
-
-        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const bookingData = {
-                name: document.getElementById('bookingClientName').value,
-                email: document.getElementById('bookingClientEmail').value,
-                phone: document.getElementById('bookingClientPhone').value,
-                eventType: document.getElementById('bookingEventType').value,
-                date: document.getElementById('bookingDate').value,
-                time: document.getElementById('bookingTime').value,
-                packageId: document.getElementById('bookingPackage').value,
-                packageName: document.getElementById('bookingPackage').selectedOptions[0]?.text,
-                status: document.getElementById('bookingStatus').value,
-                specialRequests: document.getElementById('bookingNotes').value,
-                updatedAt: new Date().toISOString()
-            };
-
-            const bookingId = document.getElementById('bookingId').value;
-            
+        // ==================== PACKAGES SELECT ====================
+        async function loadPackagesSelect() {
             try {
-                if (bookingId) {
-                    await updateDoc(doc(db, 'bookings', bookingId), bookingData);
-                } else {
-                    bookingData.createdAt = new Date().toISOString();
-                    await addDoc(collection(db, 'bookings'), bookingData);
-                    
-                    // Mark slot as booked
-                    const slotQuery = query(
-                        collection(db, 'available_slots'), 
-                        where('date', '==', bookingData.date),
-                        where('time', '==', bookingData.time)
-                    );
-                    const slotSnapshot = await getDocs(slotQuery);
-                    slotSnapshot.forEach(async (slotDoc) => {
-                        await updateDoc(doc(db, 'available_slots', slotDoc.id), { isBooked: true });
-                    });
-                }
+                const select = document.getElementById('bookingPackage');
+                const q = query(collection(db, 'packages'), where('active', '==', true));
+                const snapshot = await getDocs(q);
                 
-                closeModal('bookingModal');
-                loadBookings();
-                
+                select.innerHTML = '<option value="">Select package</option>';
+                snapshot.docs.forEach(doc => {
+                    const pkg = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = `${pkg.name} - LKR ${pkg.price?.toLocaleString() || '0'}`;
+                    select.appendChild(option);
+                });
             } catch (error) {
-                console.error('Error saving booking:', error);
-                alert('Error saving booking');
+                console.error('Error loading packages:', error);
             }
-        });
+        }
 
-        window.updateBookingStatus = async (id, currentStatus) => {
-            const newStatus = prompt('Enter new status (pending/confirmed/completed/cancelled):', currentStatus);
-            if (newStatus && ['pending', 'confirmed', 'completed', 'cancelled'].includes(newStatus)) {
-                await updateDoc(doc(db, 'bookings', id), { status: newStatus });
-                loadBookings();
-            }
-        };
+        // ==================== NOTIFICATION ====================
+        function showNotification(message, type = 'success') {
+            // You can implement a proper notification system here
+            alert(message);
+        }
 
-        window.deleteBooking = (id) => {
-            if (confirm('Delete this booking?')) {
-                deleteDoc(doc(db, 'bookings', id));
-                loadBookings();
-            }
-        };
-
-        window.showDateBookings = (date) => {
-            const filtered = currentBookings.filter(d => d.data().date === date);
-            if (filtered.length) {
-                showListView();
-                renderBookingsList(filtered);
-            }
-        };
-
+        // ==================== VIEW TOGGLES ====================
         window.showCalendarView = () => {
             currentView = 'calendar';
             document.getElementById('calendarView').style.display = 'block';
@@ -550,7 +953,14 @@
             currentView = 'list';
             document.getElementById('calendarView').style.display = 'none';
             document.getElementById('listView').style.display = 'block';
-            renderBookingsList();
+            applyFilters();
+        };
+
+        window.showDateBookings = (date) => {
+            showListView();
+            document.getElementById('bookingDateFilter').value = 'all';
+            const filtered = currentBookings.filter(b => b.date === date);
+            renderBookingsList(filtered);
         };
 
         window.changeMonth = (delta) => {
@@ -558,14 +968,21 @@
             renderCalendar();
         };
 
-        async function loadPackagesSelect() {
-            const select = document.getElementById('bookingPackage');
-            const snapshot = await getDocs(collection(db, 'packages'));
-            select.innerHTML = '<option value="">Select package</option>' + 
-                snapshot.docs.map(doc => `<option value="${doc.id}">${doc.data().name}</option>`).join('');
-        }
+        window.exportBookings = () => {
+            const data = filteredBookings.length ? filteredBookings : currentBookings;
+            const csv = data.map(b => 
+                `${b.name},${b.email},${b.date},${b.time},${b.packageName},${b.status}`
+            ).join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bookings_export.csv';
+            a.click();
+        };
 
-        // Modal functions
+        // ==================== MODAL FUNCTIONS ====================
         window.openModal = (modalId) => {
             document.getElementById(modalId).classList.add('active');
         };
@@ -574,11 +991,29 @@
             document.getElementById(modalId).classList.remove('active');
         };
 
-        // Initial load
-        loadBookings();
-        loadPackagesSelect();
+        // ==================== EVENT LISTENERS ====================
+        document.getElementById('searchBooking').addEventListener('input', () => {
+            currentPage = 1;
+            applyFilters();
+        });
 
-        // Logout
+        document.getElementById('bookingStatusFilter').addEventListener('change', () => {
+            currentPage = 1;
+            applyFilters();
+        });
+
+        document.getElementById('bookingDateFilter').addEventListener('change', () => {
+            currentPage = 1;
+            applyFilters();
+        });
+
+        document.getElementById('selectAll').addEventListener('change', (e) => {
+            document.querySelectorAll('.booking-checkbox').forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        });
+
+        // ==================== LOGOUT ====================
         document.getElementById('logoutBtn').addEventListener('click', (e) => {
             e.preventDefault();
             if (confirm('Are you sure you want to logout?')) {
@@ -586,6 +1021,9 @@
                 window.location.href = 'login.html';
             }
         });
+
+        // ==================== INITIALIZE ====================
+        initialize();
     </script>
 </body>
 </html>
