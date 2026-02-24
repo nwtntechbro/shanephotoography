@@ -33,38 +33,52 @@ class SiteSettings {
     }
 
     updateHeroVideo(videoUrl, opacity) {
-        const heroSection = document.querySelector('.hero');
-        const existingVideo = document.getElementById('heroVideo');
-        
-        if (existingVideo) {
-            existingVideo.remove();
-        }
-
-        const video = document.createElement('video');
-        video.id = 'heroVideo';
-        video.className = 'hero-video';
-        video.autoplay = true;
-        video.muted = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.style.opacity = opacity;
-
-        const source = document.createElement('source');
-        source.src = videoUrl;
-        source.type = 'video/mp4';
-
-        video.appendChild(source);
-        heroSection.insertBefore(video, heroSection.firstChild);
-
-        video.addEventListener('loadeddata', () => {
-            video.play().catch(e => console.log('Autoplay prevented:', e));
-        });
-
-        video.addEventListener('error', (e) => {
-            console.error('Video failed to load:', e);
-            heroSection.style.background = 'linear-gradient(135deg, #0b0b0b 0%, #1a1a1a 100%)';
-        });
+    const heroSection = document.querySelector('.hero');
+    const existingVideo = document.getElementById('heroVideo');
+    
+    if (existingVideo) {
+        existingVideo.remove();
     }
+
+    // Check if it's a Google Drive link and convert if needed
+    let finalUrl = videoUrl;
+    if (videoUrl.includes('drive.google.com')) {
+        // Extract file ID
+        const match = videoUrl.match(/\/d\/(.*?)\//);
+        if (match && match[1]) {
+            finalUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
+        }
+    }
+
+    const video = document.createElement('video');
+    video.id = 'heroVideo';
+    video.className = 'hero-video';
+    video.autoplay = true;
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.style.opacity = opacity;
+
+    // Add multiple source formats for better compatibility
+    const source = document.createElement('source');
+    source.src = finalUrl;
+    source.type = 'video/mp4';
+    
+    video.appendChild(source);
+    
+    // Fallback message if video fails
+    video.onerror = () => {
+        console.log('Video failed to load, showing fallback');
+        heroSection.style.background = 'linear-gradient(135deg, #0b0b0b 0%, #1a1a1a 100%)';
+    };
+
+    heroSection.insertBefore(video, heroSection.firstChild);
+
+    video.addEventListener('loadeddata', () => {
+        console.log('Video loaded successfully');
+        video.play().catch(e => console.log('Autoplay prevented:', e));
+    });
+}
 
     applyContactSettings() {
         if (this.settings.contactPhone) {
