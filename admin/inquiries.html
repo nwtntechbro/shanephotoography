@@ -1,1 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inquiries Management - Shane Photography Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar (same as index.html) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SHANE</h2>
+                <p>Photography Admin</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                <a href="inquiries.html" class="active"><i class="fas fa-inbox"></i> Inquiries</a>
+                <a href="bookings.html"><i class="fas fa-calendar-alt"></i> Bookings</a>
+                <a href="packages.html"><i class="fas fa-box"></i> Packages</a>
+                <a href="reviews.html"><i class="fas fa-star"></i> Reviews</a>
+                <a href="feed-sync.html"><i class="fab fa-facebook"></i> Facebook Feed</a>
+                <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
 
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Inquiry Management</h1>
+                <div class="admin-profile">
+                    <span>Welcome, Admin</span>
+                    <img src="https://ui-avatars.com/api/?name=Shane+Admin&background=f5b342&color=0b0b0b&size=128" alt="Admin">
+                </div>
+            </header>
+
+            <!-- Filters Bar -->
+            <div class="filters-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInquiry" placeholder="Search by name, email, or phone...">
+                </div>
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="new">New</option>
+                    <option value="read">Read</option>
+                    <option value="replied">Replied</option>
+                    <option value="archived">Archived</option>
+                </select>
+                <select class="filter-select" id="sortFilter">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+                <button class="btn-primary" onclick="refreshInquiries()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 1.5rem;">
+                <div class="stat-card" style="padding: 1rem;">
+                    <div class="stat-icon" style="width: 40px; height: 40px;">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="totalInquiries">0</h3>
+                        <p>Total</p>
+                    </div>
+                </div>
+                <div class="stat-card" style="padding: 1rem;">
+                    <div class="stat-icon" style="width: 40px; height: 40px;">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="newInquiries">0</h3>
+                        <p>New</p>
+                    </div>
+                </div>
+                <div class="stat-card" style="padding: 1rem;">
+                    <div class="stat-icon" style="width: 40px; height: 40px;">
+                        <i class="fas fa-reply"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="repliedInquiries">0</h3>
+                        <p>Replied</p>
+                    </div>
+                </div>
+                <div class="stat-card" style="padding: 1rem;">
+                    <div class="stat-icon" style="width: 40px; height: 40px;">
+                        <i class="fas fa-archive"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="archivedInquiries">0</h3>
+                        <p>Archived</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inquiries Table -->
+            <div class="recent-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>All Inquiries</h2>
+                    <div>
+                        <button class="btn-secondary" onclick="exportInquiries()">
+                            <i class="fas fa-download"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="data-table" id="inquiriesTable">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll"></th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Message</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inquiriesTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 3rem;">
+                                    <div class="spinner"></div>
+                                    <p style="margin-top: 1rem;">Loading inquiries...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- View Inquiry Modal -->
+    <div class="modal" id="viewInquiryModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="closeModal('viewInquiryModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Inquiry Details</h3>
+            
+            <div style="background: var(--dark-lighter); padding: 1.5rem; border-radius: 20px; margin-bottom: 1.5rem;">
+                <div style="display: grid; gap: 1rem;">
+                    <div><strong>Name:</strong> <span id="viewName"></span></div>
+                    <div><strong>Email:</strong> <span id="viewEmail"></span></div>
+                    <div><strong>Phone:</strong> <span id="viewPhone"></span></div>
+                    <div><strong>Date:</strong> <span id="viewDate"></span></div>
+                    <div><strong>Status:</strong> <span id="viewStatus"></span></div>
+                </div>
+            </div>
+            
+            <div style="background: var(--dark-lighter); padding: 1.5rem; border-radius: 20px; margin-bottom: 1.5rem;">
+                <strong>Message:</strong>
+                <p id="viewMessage" style="margin-top: 1rem; line-height: 1.6;"></p>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-primary" style="flex: 1;" onclick="replyToInquiry(currentInquiryId)">
+                    <i class="fas fa-reply"></i> Reply
+                </button>
+                <button class="btn-secondary" style="flex: 1;" onclick="markAsRead(currentInquiryId)">
+                    <i class="fas fa-check"></i> Mark as Read
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reply Modal -->
+    <div class="modal" id="replyModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <button class="modal-close" onclick="closeModal('replyModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Reply to Inquiry</h3>
+            
+            <div style="margin-bottom: 1rem;">
+                <p><strong>To:</strong> <span id="replyToEmail"></span></p>
+            </div>
+            
+            <textarea id="replyMessage" rows="6" style="width: 100%; padding: 1rem; background: var(--dark-lighter); border: 1px solid var(--primary); border-radius: 15px; color: white; margin-bottom: 1rem;" placeholder="Type your reply..."></textarea>
+            
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-primary" style="flex: 1;" onclick="sendReply()">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+                <button class="btn-secondary" style="flex: 1;" onclick="closeModal('replyModal')">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('deleteModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 style="color: var(--danger); margin-bottom: 1rem;">Delete Inquiry</h3>
+            <p style="color: var(--gray); margin-bottom: 2rem;">Are you sure you want to delete this inquiry? This action cannot be undone.</p>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-secondary" onclick="closeModal('deleteModal')" style="flex: 1;">Cancel</button>
+                <button class="btn-danger" onclick="confirmDelete()" style="flex: 1;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from '../js/firebase-config.js';
+        import { 
+            collection, query, getDocs, doc, getDoc, updateDoc, deleteDoc, orderBy, where, limit, startAfter 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // State management
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let lastVisible = null;
+        let firstVisible = null;
+        let currentInquiries = [];
+        let currentInquiryId = null;
+
+        // Load inquiries with filters
+        async function loadInquiries(filters = {}) {
+            try {
+                const tbody = document.getElementById('inquiriesTableBody');
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 3rem;"><div class="spinner"></div><p>Loading...</p></td></tr>';
+
+                let baseQuery = collection(db, 'inquiries');
+                let constraints = [];
+
+                // Apply filters
+                if (filters.status && filters.status !== 'all') {
+                    constraints.push(where('status', '==', filters.status));
+                }
+
+                // Sorting
+                if (filters.sort === 'oldest') {
+                    constraints.push(orderBy('createdAt', 'asc'));
+                } else {
+                    constraints.push(orderBy('createdAt', 'desc'));
+                }
+
+                // Pagination
+                constraints.push(limit(itemsPerPage));
+                
+                const q = query(baseQuery, ...constraints);
+                const snapshot = await getDocs(q);
+                
+                currentInquiries = snapshot.docs;
+                renderInquiries(currentInquiries);
+                updateStats();
+                
+            } catch (error) {
+                console.error('Error loading inquiries:', error);
+                document.getElementById('inquiriesTableBody').innerHTML = 
+                    '<tr><td colspan="8" style="text-align: center; color: var(--danger);">Error loading inquiries</td></tr>';
+            }
+        }
+
+        // Render inquiries
+        function renderInquiries(inquiries) {
+            const tbody = document.getElementById('inquiriesTableBody');
+            
+            if (inquiries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 3rem;">No inquiries found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = inquiries.map(doc => {
+                const data = doc.data();
+                const date = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString() : 'N/A';
+                
+                return `
+                    <tr>
+                        <td><input type="checkbox" class="inquiry-checkbox" value="${doc.id}"></td>
+                        <td><strong>${data.name || 'N/A'}</strong></td>
+                        <td>${data.email || 'N/A'}</td>
+                        <td>${data.phone || '-'}</td>
+                        <td>${data.message ? data.message.substring(0, 50) + '...' : '-'}</td>
+                        <td>
+                            <span class="status-badge ${data.status || 'new'}" onclick="changeStatus('${doc.id}', '${data.status || 'new'}')">
+                                ${data.status || 'new'}
+                            </span>
+                        </td>
+                        <td>${date}</td>
+                        <td>
+                            <button class="btn-icon" onclick="viewInquiry('${doc.id}')" title="View"><i class="fas fa-eye"></i></button>
+                            <button class="btn-icon" onclick="replyToInquiry('${doc.id}', '${data.email}')" title="Reply"><i class="fas fa-reply"></i></button>
+                            <button class="btn-icon" onclick="archiveInquiry('${doc.id}')" title="Archive"><i class="fas fa-archive"></i></button>
+                            <button class="btn-icon" onclick="deleteInquiry('${doc.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Update statistics
+        async function updateStats() {
+            const snapshot = await getDocs(collection(db, 'inquiries'));
+            const inquiries = snapshot.docs.map(doc => doc.data());
+            
+            document.getElementById('totalInquiries').textContent = inquiries.length;
+            document.getElementById('newInquiries').textContent = inquiries.filter(i => i.status === 'new').length;
+            document.getElementById('repliedInquiries').textContent = inquiries.filter(i => i.status === 'replied').length;
+            document.getElementById('archivedInquiries').textContent = inquiries.filter(i => i.status === 'archived').length;
+        }
+
+        // CRUD Operations
+        window.viewInquiry = async (id) => {
+            currentInquiryId = id;
+            const docRef = doc(db, 'inquiries', id);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('viewName').textContent = data.name;
+                document.getElementById('viewEmail').textContent = data.email;
+                document.getElementById('viewPhone').textContent = data.phone || '-';
+                document.getElementById('viewDate').textContent = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString() : 'N/A';
+                document.getElementById('viewStatus').textContent = data.status || 'new';
+                document.getElementById('viewMessage').textContent = data.message;
+                
+                openModal('viewInquiryModal');
+                
+                // Mark as read if new
+                if (data.status === 'new') {
+                    await updateDoc(docRef, { status: 'read' });
+                    loadInquiries();
+                }
+            }
+        };
+
+        window.replyToInquiry = (id, email) => {
+            currentInquiryId = id;
+            document.getElementById('replyToEmail').textContent = email;
+            closeModal('viewInquiryModal');
+            openModal('replyModal');
+        };
+
+        window.sendReply = async () => {
+            const message = document.getElementById('replyMessage').value;
+            if (!message) {
+                alert('Please enter a reply message');
+                return;
+            }
+
+            // Update status to replied
+            await updateDoc(doc(db, 'inquiries', currentInquiryId), { 
+                status: 'replied',
+                replyMessage: message,
+                repliedAt: new Date().toISOString()
+            });
+
+            // Here you would integrate with email service
+            console.log('Sending reply to:', document.getElementById('replyToEmail').textContent, message);
+            
+            alert('Reply sent successfully!');
+            closeModal('replyModal');
+            document.getElementById('replyMessage').value = '';
+            loadInquiries();
+        };
+
+        window.markAsRead = async (id) => {
+            await updateDoc(doc(db, 'inquiries', id), { status: 'read' });
+            closeModal('viewInquiryModal');
+            loadInquiries();
+        };
+
+        window.archiveInquiry = async (id) => {
+            await updateDoc(doc(db, 'inquiries', id), { status: 'archived' });
+            loadInquiries();
+        };
+
+        window.deleteInquiry = (id) => {
+            currentInquiryId = id;
+            openModal('deleteModal');
+        };
+
+        window.confirmDelete = async () => {
+            await deleteDoc(doc(db, 'inquiries', currentInquiryId));
+            closeModal('deleteModal');
+            loadInquiries();
+        };
+
+        window.changeStatus = async (id, currentStatus) => {
+            const newStatus = prompt('Enter new status (new/read/replied/archived):', currentStatus);
+            if (newStatus && ['new', 'read', 'replied', 'archived'].includes(newStatus)) {
+                await updateDoc(doc(db, 'inquiries', id), { status: newStatus });
+                loadInquiries();
+            }
+        };
+
+        // Bulk actions
+        document.getElementById('selectAll').addEventListener('change', (e) => {
+            document.querySelectorAll('.inquiry-checkbox').forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        });
+
+        window.exportInquiries = () => {
+            const data = currentInquiries.map(doc => {
+                const d = doc.data();
+                return {
+                    Name: d.name,
+                    Email: d.email,
+                    Phone: d.phone,
+                    Message: d.message,
+                    Status: d.status,
+                    Date: d.createdAt ? new Date(d.createdAt.toDate()).toLocaleString() : 'N/A'
+                };
+            });
+            
+            const csv = 'data:text/csv;charset=utf-8,' + 
+                Object.keys(data[0]).join(',') + '\n' + 
+                data.map(row => Object.values(row).join(',')).join('\n');
+            
+            const link = document.createElement('a');
+            link.href = encodeURI(csv);
+            link.download = 'inquiries_export.csv';
+            link.click();
+        };
+
+        // Search functionality
+        document.getElementById('searchInquiry').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = currentInquiries.filter(doc => {
+                const data = doc.data();
+                return data.name?.toLowerCase().includes(searchTerm) ||
+                       data.email?.toLowerCase().includes(searchTerm) ||
+                       data.phone?.includes(searchTerm);
+            });
+            renderInquiries(filtered);
+        });
+
+        // Filter change
+        document.getElementById('statusFilter').addEventListener('change', (e) => {
+            loadInquiries({ status: e.target.value });
+        });
+
+        document.getElementById('sortFilter').addEventListener('change', (e) => {
+            loadInquiries({ sort: e.target.value });
+        });
+
+        window.refreshInquiries = () => {
+            loadInquiries();
+        };
+
+        // Modal functions
+        window.openModal = (modalId) => {
+            document.getElementById(modalId).classList.add('active');
+        };
+
+        window.closeModal = (modalId) => {
+            document.getElementById(modalId).classList.remove('active');
+        };
+
+        // Initial load
+        loadInquiries();
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>
