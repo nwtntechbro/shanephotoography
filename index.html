@@ -7,8 +7,210 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Splash Screen Styles */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            height: -webkit-fill-available;
+            background: linear-gradient(135deg, #0b0b0b 0%, #1a1a1a 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .splash-content {
+            text-align: center;
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .splash-logo {
+            font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .splash-logo span {
+            color: #f5b342;
+        }
+
+        .countdown-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        .countdown-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(5rem, 15vw, 8rem);
+            font-weight: 800;
+            color: #f5b342;
+            text-shadow: 0 0 30px rgba(245, 179, 66, 0.5);
+            z-index: 2;
+            opacity: 0;
+            animation: pulseIn 0.5s ease forwards;
+        }
+
+        .countdown-circle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .countdown-circle circle {
+            fill: none;
+            stroke: #f5b342;
+            stroke-width: 4;
+            stroke-dasharray: 879.2;
+            stroke-dashoffset: 879.2;
+            animation: fillCircle 10s linear forwards;
+        }
+
+        .splash-message {
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            margin-top: 3rem;
+            color: #f0f0f0;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease 0.3s forwards;
+        }
+
+        .splash-message small {
+            display: block;
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
+            color: #b0b0b0;
+            margin-top: 1rem;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulseIn {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes fillCircle {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .countdown-container {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .splash-logo {
+                margin-bottom: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .countdown-container {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .splash-content {
+                padding: 1rem;
+            }
+        }
+
+        /* Landscape mode */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .splash-content {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 2rem;
+            }
+            
+            .countdown-container {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .splash-logo {
+                margin-bottom: 0;
+                font-size: 2rem;
+            }
+            
+            .splash-message {
+                margin-top: 0;
+            }
+        }
+
+        /* iOS Height Fix */
+        @supports (-webkit-touch-callout: none) {
+            .splash-screen {
+                height: -webkit-fill-available;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">
+                SHANE <span>PHOTOGRAPHY</span>
+            </div>
+            
+            <div class="countdown-container">
+                <div class="countdown-number" id="countdownNumber">10</div>
+                <svg class="countdown-circle" viewBox="0 0 280 280">
+                    <circle cx="140" cy="140" r="138" stroke="rgba(245, 179, 66, 0.2)" stroke-width="4" fill="none"/>
+                    <circle cx="140" cy="140" r="138" stroke="#f5b342" stroke-width="4" fill="none" stroke-linecap="round" style="stroke-dasharray: 867; stroke-dashoffset: 867; animation: fillCircle 10s linear forwards;"/>
+                </svg>
+            </div>
+            
+            <div class="splash-message">
+                Welcome to Shane Photography
+                <small>Prepare for a cinematic experience</small>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="js/coutner.js"></script>
+
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
