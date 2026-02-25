@@ -3,147 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Site Settings - Shane Photography Admin</title>
+    <title>Counter Settings - Shane Photography Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body>
     <div class="admin-container">
-        <!-- Add this inside the themeTab section, after video settings -->
-<div class="settings-section">
-    <h3>Splash Screen / Countdown</h3>
-    <div class="form-container">
-        <div class="form-group">
-            <label style="display: flex; align-items: center; gap: 1rem;">
-                <input type="checkbox" id="splashEnabled" style="width: 20px; height: 20px;">
-                <span style="color: var(--light);">Enable Splash Screen (10-second countdown before website)</span>
-            </label>
-            <small style="color: var(--gray); display: block; margin-top: 0.5rem;">When enabled, visitors will see a countdown from 10 to 1 before accessing the website</small>
-        </div>
-
-        <div class="form-group" id="splashMessageGroup">
-            <label>Splash Screen Message</label>
-            <input type="text" id="splashMessage" value="Welcome to Shane Photography" placeholder="Enter welcome message">
-        </div>
-
-        <div class="form-group" id="splashSubMessageGroup">
-            <label>Sub Message (Optional)</label>
-            <input type="text" id="splashSubMessage" value="Prepare for a cinematic experience" placeholder="Enter sub message">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Countdown Duration (seconds)</label>
-                <select id="splashDuration">
-                    <option value="3">3 seconds</option>
-                    <option value="5">5 seconds</option>
-                    <option value="10" selected>10 seconds</option>
-                    <option value="15">15 seconds</option>
-                </select>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SHANE</h2>
+                <p>Photography Admin</p>
             </div>
-            <div class="form-group">
-                <label>Splash Logo Color</label>
-                <input type="color" id="splashLogoColor" value="#f5b342">
+            <nav class="sidebar-nav">
+                <a href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                <a href="inquiries.html"><i class="fas fa-inbox"></i> Inquiries</a>
+                <a href="bookings.html"><i class="fas fa-calendar-alt"></i> Bookings</a>
+                <a href="packages.html"><i class="fas fa-box"></i> Packages</a>
+                <a href="reviews.html"><i class="fas fa-star"></i> Reviews</a>
+                <a href="counter.html" class="active"><i class="fas fa-clock"></i> Counter</a>
+                <a href="feed-sync.html"><i class="fab fa-facebook"></i> Facebook Feed</a>
+                <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
-        </div>
+        </aside>
 
-        <div class="form-group">
-            <label>Background Style</label>
-            <select id="splashBackground">
-                <option value="gradient">Gradient Dark</option>
-                <option value="solid">Solid Black</option>
-                <option value="image">Background Image</option>
-            </select>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Counter / Splash Screen Settings</h1>
+                <div class="admin-profile">
+                    <span>Welcome, Admin</span>
+                    <img src="https://ui-avatars.com/api/?name=Shane+Admin&background=f5b342&color=0b0b0b&size=128" alt="Admin">
+                </div>
+            </header>
 
-        <div class="form-group" id="splashImageGroup" style="display: none;">
-            <label>Background Image URL</label>
-            <input type="text" id="splashImageUrl" placeholder="https://example.com/image.jpg">
-        </div>
+            <!-- Counter Settings Section -->
+            <div class="settings-section">
+                <h3><i class="fas fa-clock"></i> Splash Screen / Countdown</h3>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 1rem;">
+                            <input type="checkbox" id="splashEnabled" style="width: 20px; height: 20px;">
+                            <span style="color: var(--light);">Enable Splash Screen Countdown</span>
+                        </label>
+                        <small style="color: var(--gray); display: block; margin-top: 0.5rem;">
+                            When enabled, visitors will see a countdown from X to 1, then "Welcome!" before accessing the website
+                        </small>
+                    </div>
 
-        <!-- Preview Button -->
-        <button type="button" class="btn-secondary" onclick="previewSplashScreen()" style="margin-top: 1rem;">
-            <i class="fas fa-eye"></i> Preview Splash Screen
-        </button>
+                    <div class="form-group" id="splashMessageGroup">
+                        <label>Main Welcome Message</label>
+                        <input type="text" id="splashMessage" value="Welcome to Shane Photography" placeholder="Enter welcome message">
+                    </div>
+
+                    <div class="form-group" id="splashSubMessageGroup">
+                        <label>Sub Message (Optional)</label>
+                        <input type="text" id="splashSubMessage" value="Prepare for a cinematic experience" placeholder="Enter sub message">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Countdown Duration (seconds)</label>
+                            <select id="splashDuration">
+                                <option value="3">3 seconds (3 → 2 → 1)</option>
+                                <option value="5">5 seconds (5 → 4 → 3 → 2 → 1)</option>
+                                <option value="10" selected>10 seconds (10 → 9 → ... → 1)</option>
+                                <option value="15">15 seconds</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Countdown Color</label>
+                            <input type="color" id="splashLogoColor" value="#f5b342">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Background Style</label>
+                        <select id="splashBackground">
+                            <option value="gradient">Gradient Dark</option>
+                            <option value="solid">Solid Black</option>
+                            <option value="image">Background Image</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="splashImageGroup" style="display: none;">
+                        <label>Background Image URL</label>
+                        <input type="text" id="splashImageUrl" placeholder="https://example.com/image.jpg">
+                        <small style="color: var(--gray);">Use a dark image for best text visibility</small>
+                    </div>
+
+                    <!-- Preview Button -->
+                    <button type="button" class="btn-primary" onclick="previewSplashScreen()" style="margin-top: 1rem;">
+                        <i class="fas fa-eye"></i> Preview Countdown
+                    </button>
+
+                    <!-- Save Button -->
+                    <button type="button" class="btn-primary" onclick="saveSplashSettings()" style="margin-top: 1rem; margin-left: 1rem;">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview Info -->
+            <div class="recent-section" style="margin-top: 2rem;">
+                <h3>How It Works</h3>
+                <div style="color: var(--gray); line-height: 1.8;">
+                    <p><i class="fas fa-check-circle" style="color: var(--primary);"></i> <strong>Countdown Sequence:</strong> Shows numbers from X down to 1</p>
+                    <p><i class="fas fa-check-circle" style="color: var(--primary);"></i> <strong>Final Message:</strong> After reaching 1, shows "Welcome!" for 1 second</p>
+                    <p><i class="fas fa-check-circle" style="color: var(--primary);"></i> <strong>Auto Transition:</strong> Automatically enters website after welcome message</p>
+                    <p><i class="fas fa-check-circle" style="color: var(--primary);"></i> <strong>Mobile Responsive:</strong> Works perfectly on all devices</p>
+                </div>
+            </div>
+        </main>
     </div>
-</div>
-    
-    </div>
 
-   <script>
-    // Splash Screen Preview Function
-    window.previewSplashScreen = () => {
-        const settings = {
-            splashEnabled: document.getElementById('splashEnabled').checked,
-            splashDuration: document.getElementById('splashDuration').value,
-            splashMessage: document.getElementById('splashMessage').value,
-            splashSubMessage: document.getElementById('splashSubMessage').value,
-            splashLogoColor: document.getElementById('splashLogoColor').value,
-            splashBackground: document.getElementById('splashBackground').value,
-            splashImageUrl: document.getElementById('splashImageUrl').value
+    <script type="module">
+        import { db } from '../js/firebase-config.js';
+        import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ==================== LOAD SETTINGS ====================
+        async function loadSplashSettings() {
+            try {
+                const settingsDoc = await getDoc(doc(db, 'settings', 'site'));
+                if (settingsDoc.exists()) {
+                    const settings = settingsDoc.data();
+                    
+                    document.getElementById('splashEnabled').checked = settings.splashEnabled || false;
+                    document.getElementById('splashDuration').value = settings.splashDuration || '10';
+                    document.getElementById('splashMessage').value = settings.splashMessage || 'Welcome to Shane Photography';
+                    document.getElementById('splashSubMessage').value = settings.splashSubMessage || 'Prepare for a cinematic experience';
+                    document.getElementById('splashLogoColor').value = settings.splashLogoColor || '#f5b342';
+                    document.getElementById('splashBackground').value = settings.splashBackground || 'gradient';
+                    document.getElementById('splashImageUrl').value = settings.splashImageUrl || '';
+                    
+                    // Toggle image group
+                    document.getElementById('splashImageGroup').style.display = 
+                        settings.splashBackground === 'image' ? 'block' : 'none';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // ==================== SAVE SETTINGS ====================
+        window.saveSplashSettings = async () => {
+            const splashSettings = {
+                splashEnabled: document.getElementById('splashEnabled').checked,
+                splashDuration: parseInt(document.getElementById('splashDuration').value),
+                splashMessage: document.getElementById('splashMessage').value,
+                splashSubMessage: document.getElementById('splashSubMessage').value,
+                splashLogoColor: document.getElementById('splashLogoColor').value,
+                splashBackground: document.getElementById('splashBackground').value,
+                splashImageUrl: document.getElementById('splashImageUrl').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                await setDoc(doc(db, 'settings', 'site'), splashSettings, { merge: true });
+                alert('Splash screen settings saved successfully!');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('Error saving settings: ' + error.message);
+            }
         };
-        
-        // Call the preview method from main.js
-        if (window.splashManager && window.splashManager.constructor.preview) {
-            window.splashManager.constructor.preview(settings);
-        } else {
-            // Fallback preview
-            alert('Preview feature loaded! Settings would show countdown with:\n' +
-                  `Duration: ${settings.splashDuration}s\n` +
-                  `Message: ${settings.splashMessage}\n` +
-                  `Background: ${settings.splashBackground}`);
-        }
-    };
 
-    // Toggle background image input based on selection
-    document.getElementById('splashBackground').addEventListener('change', (e) => {
-        const imageGroup = document.getElementById('splashImageGroup');
-        imageGroup.style.display = e.target.value === 'image' ? 'block' : 'none';
-    });
-
-    // Load existing settings into splash controls
-    async function loadSplashSettings() {
-        const settingsDoc = await getDoc(doc(db, 'settings', 'site'));
-        if (settingsDoc.exists()) {
-            const settings = settingsDoc.data();
+        // ==================== PREVIEW FUNCTION ====================
+        window.previewSplashScreen = () => {
+            const settings = {
+                splashEnabled: document.getElementById('splashEnabled').checked,
+                splashDuration: document.getElementById('splashDuration').value,
+                splashMessage: document.getElementById('splashMessage').value,
+                splashSubMessage: document.getElementById('splashSubMessage').value,
+                splashLogoColor: document.getElementById('splashLogoColor').value,
+                splashBackground: document.getElementById('splashBackground').value,
+                splashImageUrl: document.getElementById('splashImageUrl').value
+            };
             
-            document.getElementById('splashEnabled').checked = settings.splashEnabled || false;
-            document.getElementById('splashDuration').value = settings.splashDuration || '10';
-            document.getElementById('splashMessage').value = settings.splashMessage || 'Welcome to Shane Photography';
-            document.getElementById('splashSubMessage').value = settings.splashSubMessage || 'Prepare for a cinematic experience';
-            document.getElementById('splashLogoColor').value = settings.splashLogoColor || '#f5b342';
-            document.getElementById('splashBackground').value = settings.splashBackground || 'gradient';
-            document.getElementById('splashImageUrl').value = settings.splashImageUrl || '';
-            
-            // Toggle image group
-            document.getElementById('splashImageGroup').style.display = 
-                settings.splashBackground === 'image' ? 'block' : 'none';
-        }
-    }
-
-    // Save splash settings with the main settings
-    const originalSaveFunction = window.saveAllSettings;
-    window.saveAllSettings = async () => {
-        // Add splash settings to the main settings object
-        const splashSettings = {
-            splashEnabled: document.getElementById('splashEnabled').checked,
-            splashDuration: parseInt(document.getElementById('splashDuration').value),
-            splashMessage: document.getElementById('splashMessage').value,
-            splashSubMessage: document.getElementById('splashSubMessage').value,
-            splashLogoColor: document.getElementById('splashLogoColor').value,
-            splashBackground: document.getElementById('splashBackground').value,
-            splashImageUrl: document.getElementById('splashImageUrl').value
+            // Call the preview method from counter.js
+            if (window.splashManager && window.splashManager.constructor.preview) {
+                window.splashManager.constructor.preview(settings);
+            } else {
+                // Fallback preview if splashManager not loaded
+                import('../js/counter.js').then(module => {
+                    if (module.SplashScreenManager) {
+                        module.SplashScreenManager.preview(settings);
+                    }
+                });
+            }
         };
-        
-        // Call original save function (it will collect all inputs)
-        if (originalSaveFunction) {
-            await originalSaveFunction();
-        }
-    };
 
-    // Load splash settings on page load
-    loadSplashSettings();
-</script>
+        // ==================== TOGGLE BACKGROUND IMAGE INPUT ====================
+        document.getElementById('splashBackground').addEventListener('change', (e) => {
+            const imageGroup = document.getElementById('splashImageGroup');
+            imageGroup.style.display = e.target.value === 'image' ? 'block' : 'none';
+        });
+
+        // ==================== LOGOUT ====================
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // ==================== INITIALIZE ====================
+        loadSplashSettings();
+    </script>
 </body>
 </html>
