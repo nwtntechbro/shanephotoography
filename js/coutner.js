@@ -1,21 +1,21 @@
 import { db } from './firebase-config.js';
 import { 
-    collection, query, getDocs, addDoc, orderBy, limit, where, serverTimestamp, doc, getDoc 
+    doc, getDoc 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ==================== SPLASH SCREEN MANAGER ====================
 class SplashScreenManager {
     constructor() {
-        this.splashScreen = document.getElementById('splashScreen');
-        this.countdownNumber = document.getElementById('countdownNumber');
-        this.splashMessage = document.querySelector('.splash-message');
-        this.mainContent = document.querySelector('.navbar');
+        this.splashContainer = document.getElementById('splashContainer');
         this.enabled = false;
         this.duration = 10;
         this.message = 'Welcome to Shane Photography';
         this.subMessage = 'Prepare for a cinematic experience';
+        this.logoColor = '#f5b342';
+        this.background = 'gradient';
+        this.imageUrl = '';
         
-        // Check if splash screen should be shown
+        // Load settings and create splash if enabled
         this.loadSettings();
     }
 
@@ -28,64 +28,71 @@ class SplashScreenManager {
                 this.duration = parseInt(settings.splashDuration) || 10;
                 this.message = settings.splashMessage || 'Welcome to Shane Photography';
                 this.subMessage = settings.splashSubMessage || 'Prepare for a cinematic experience';
+                this.logoColor = settings.splashLogoColor || '#f5b342';
+                this.background = settings.splashBackground || 'gradient';
+                this.imageUrl = settings.splashImageUrl || '';
                 
-                // Apply settings to splash screen
-                this.applySettings(settings);
-                
-                // Show splash if enabled
+                // Only create splash screen if enabled
                 if (this.enabled) {
+                    this.createSplashScreen();
                     this.showSplash();
-                } else {
-                    this.hideSplash();
                 }
-            } else {
-                // Default - no splash
-                this.hideSplash();
             }
         } catch (error) {
             console.error('Error loading splash settings:', error);
-            this.hideSplash();
         }
     }
 
-    applySettings(settings) {
+    createSplashScreen() {
+        if (!this.splashContainer) return;
+
+        // Clear container
+        this.splashContainer.innerHTML = '';
+
+        // Create splash screen HTML
+        const splashHTML = `
+            <div id="splashScreen" class="splash-screen">
+                <div class="splash-content">
+                    <div class="splash-logo">
+                        SHANE <span style="color: ${this.logoColor}">PHOTOGRAPHY</span>
+                    </div>
+                    
+                    <div class="countdown-container">
+                        <div class="countdown-number" id="countdownNumber">${this.duration}</div>
+                        <svg class="countdown-circle" viewBox="0 0 280 280">
+                            <circle cx="140" cy="140" r="138" stroke="rgba(245, 179, 66, 0.2)" stroke-width="4" fill="none"/>
+                            <circle cx="140" cy="140" r="138" stroke="${this.logoColor}" stroke-width="4" fill="none" stroke-linecap="round" style="stroke-dasharray: 867; stroke-dashoffset: 867; animation: fillCircle ${this.duration}s linear forwards;"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="splash-message">
+                        ${this.message}
+                        <small>${this.subMessage}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.splashContainer.innerHTML = splashHTML;
+        
+        // Get references
+        this.splashScreen = document.getElementById('splashScreen');
+        this.countdownNumber = document.getElementById('countdownNumber');
+        this.splashMessage = document.querySelector('.splash-message');
+
+        // Apply background
+        this.applyBackground();
+    }
+
+    applyBackground() {
         if (!this.splashScreen) return;
 
-        // Update messages
-        const logoElement = this.splashScreen.querySelector('.splash-logo');
-        
-        if (logoElement) {
-            logoElement.innerHTML = `SHANE <span style="color: ${settings.splashLogoColor || '#f5b342'}">PHOTOGRAPHY</span>`;
-        }
-        
-        if (this.splashMessage) {
-            this.splashMessage.innerHTML = `
-                ${this.message}
-                <small>${this.subMessage}</small>
-            `;
-        }
-
-        // Update background
-        if (settings.splashBackground === 'solid') {
+        if (this.background === 'solid') {
             this.splashScreen.style.background = '#0b0b0b';
-        } else if (settings.splashBackground === 'image' && settings.splashImageUrl) {
-            this.splashScreen.style.background = `url('${settings.splashImageUrl}') center/cover no-repeat`;
+        } else if (this.background === 'image' && this.imageUrl) {
+            this.splashScreen.style.background = `url('${this.imageUrl}') center/cover no-repeat`;
         } else {
             this.splashScreen.style.background = 'linear-gradient(135deg, #0b0b0b 0%, #1a1a1a 100%)';
-        }
-
-        // Update countdown circle color
-        const circles = this.splashScreen.querySelectorAll('.countdown-circle circle');
-        circles.forEach(circle => {
-            if (circle.getAttribute('stroke') !== 'rgba(245, 179, 66, 0.2)') {
-                circle.setAttribute('stroke', settings.splashLogoColor || '#f5b342');
-            }
-        });
-
-        // Update animation duration
-        const animCircle = this.splashScreen.querySelector('.countdown-circle circle:last-child');
-        if (animCircle) {
-            animCircle.style.animation = `fillCircle ${this.duration}s linear forwards`;
         }
     }
 
@@ -110,6 +117,13 @@ class SplashScreenManager {
         
         // Restore scrolling
         document.body.style.overflow = '';
+        
+        // Remove splash from DOM after animation
+        setTimeout(() => {
+            if (this.splashContainer) {
+                this.splashContainer.innerHTML = '';
+            }
+        }, 800);
     }
 
     startCountdown() {
@@ -132,41 +146,21 @@ class SplashScreenManager {
                 // Schedule next update
                 setTimeout(updateCountdown, 1000);
             } else {
-                // Countdown finished - show "Welcome" message for 1 second
+                // Countdown finished - show "Welcome" message
                 if (this.countdownNumber) {
                     this.countdownNumber.style.display = 'none';
                 }
                 
-                // Show welcome message in the countdown area
-                const countdownContainer = this.splashScreen.querySelector('.countdown-container');
-                if (countdownContainer) {
-                    // Hide the circle
-                    const circle = countdownContainer.querySelector('.countdown-circle');
-                    if (circle) circle.style.display = 'none';
-                    
-                    // Show welcome text
-                    const welcomeDiv = document.createElement('div');
-                    welcomeDiv.className = 'welcome-message';
-                    welcomeDiv.style.cssText = `
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        font-size: clamp(2rem, 6vw, 3rem);
-                        font-weight: 800;
-                        color: #f5b342;
-                        text-align: center;
-                        width: 100%;
-                        animation: fadeInUp 0.5s ease forwards;
-                    `;
-                    welcomeDiv.innerHTML = 'Welcome!<br><span style="font-size: 0.6em; color: white;">Entering Website...</span>';
-                    
-                    // Remove any existing welcome message
-                    const existingWelcome = countdownContainer.querySelector('.welcome-message');
-                    if (existingWelcome) existingWelcome.remove();
-                    
-                    countdownContainer.appendChild(welcomeDiv);
-                }
+                // Hide the circle
+                const circle = this.splashScreen.querySelector('.countdown-circle');
+                if (circle) circle.style.display = 'none';
+                
+                // Show welcome message
+                const container = this.splashScreen.querySelector('.countdown-container');
+                const welcomeDiv = document.createElement('div');
+                welcomeDiv.className = 'welcome-message';
+                welcomeDiv.innerHTML = 'Welcome!<br><span>Entering Website...</span>';
+                container.appendChild(welcomeDiv);
                 
                 // Hide splash after 1 second
                 setTimeout(() => {
@@ -251,6 +245,7 @@ class SplashScreenManager {
         // Start countdown preview
         let count = parseInt(settings.splashDuration) || 10;
         const numberElement = splash.querySelector('.countdown-number');
+        const circle = splash.querySelector('.countdown-circle');
         
         const interval = setInterval(() => {
             count--;
@@ -266,7 +261,6 @@ class SplashScreenManager {
                 }
                 
                 const container = splash.querySelector('.countdown-container');
-                const circle = splash.querySelector('.countdown-circle');
                 if (circle) circle.style.display = 'none';
                 
                 const welcomeDiv = document.createElement('div');
