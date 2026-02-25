@@ -104,6 +104,27 @@
             color: #b0b0b0;
             margin-top: 1rem;
         }
+        /* Add this to the splash screen styles */
+        .welcome-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 800;
+            color: #f5b342;
+            text-align: center;
+            width: 100%;
+            animation: fadeInUp 0.5s ease forwards;
+            z-index: 3;
+        }
+        
+        .welcome-message span {
+            font-size: 0.6em;
+            color: white;
+            display: block;
+            margin-top: 1rem;
+        }
 
         @keyframes fadeInUp {
             to {
