@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Settings - Shane Photography Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Add this inside the themeTab section, after video settings -->
+<div class="settings-section">
+    <h3>Splash Screen / Countdown</h3>
+    <div class="form-container">
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 1rem;">
+                <input type="checkbox" id="splashEnabled" style="width: 20px; height: 20px;">
+                <span style="color: var(--light);">Enable Splash Screen (10-second countdown before website)</span>
+            </label>
+            <small style="color: var(--gray); display: block; margin-top: 0.5rem;">When enabled, visitors will see a countdown from 10 to 1 before accessing the website</small>
+        </div>
+
+        <div class="form-group" id="splashMessageGroup">
+            <label>Splash Screen Message</label>
+            <input type="text" id="splashMessage" value="Welcome to Shane Photography" placeholder="Enter welcome message">
+        </div>
+
+        <div class="form-group" id="splashSubMessageGroup">
+            <label>Sub Message (Optional)</label>
+            <input type="text" id="splashSubMessage" value="Prepare for a cinematic experience" placeholder="Enter sub message">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Countdown Duration (seconds)</label>
+                <select id="splashDuration">
+                    <option value="3">3 seconds</option>
+                    <option value="5">5 seconds</option>
+                    <option value="10" selected>10 seconds</option>
+                    <option value="15">15 seconds</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Splash Logo Color</label>
+                <input type="color" id="splashLogoColor" value="#f5b342">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Background Style</label>
+            <select id="splashBackground">
+                <option value="gradient">Gradient Dark</option>
+                <option value="solid">Solid Black</option>
+                <option value="image">Background Image</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="splashImageGroup" style="display: none;">
+            <label>Background Image URL</label>
+            <input type="text" id="splashImageUrl" placeholder="https://example.com/image.jpg">
+        </div>
+
+        <!-- Preview Button -->
+        <button type="button" class="btn-secondary" onclick="previewSplashScreen()" style="margin-top: 1rem;">
+            <i class="fas fa-eye"></i> Preview Splash Screen
+        </button>
+    </div>
+</div>
+    
+    </div>
+
+    <script type="module">
+        import { db, storage } from '../js/firebase-config.js';
+        import { doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        // Tab switching
+        window.showTab = (tabName) => {
+            // Hide all tabs
+            document.getElementById('generalTab').style.display = 'none';
+            document.getElementById('contactTab').style.display = 'none';
+            document.getElementById('bookingTab').style.display = 'none';
+            document.getElementById('themeTab').style.display = 'none';
+            document.getElementById('seoTab').style.display = 'none';
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+            
+            // Update button styles
+            document.querySelectorAll('[id^="tab"]').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+            document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.remove('btn-secondary');
+            document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add('btn-primary');
+        };
+
+        // Load settings from Firebase
+        async function loadSettings() {
+            try {
+                const settingsDoc = await getDoc(doc(db, 'settings', 'site'));
+                if (settingsDoc.exists()) {
+                    const settings = settingsDoc.data();
+                    
+                    // Populate all fields
+                    for (const [key, value] of Object.entries(settings)) {
+                        const element = document.getElementById(key);
+                        if (element) {
+                            if (element.type === 'checkbox') {
+                                if (Array.isArray(value)) {
+                                    // Handle checkbox groups
+                                    value.forEach(val => {
+                                        const cb = document.querySelector(`input[value="${val}"]`);
+                                        if (cb) cb.checked = true;
+                                    });
+                                } else {
+                                    element.checked = value;
+                                }
+                            } else {
+                                element.value = value;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Save all settings
+        window.saveAllSettings = async () => {
+            const settings = {};
+            
+            // Collect all input values
+            document.querySelectorAll('input, select, textarea').forEach(element => {
+                if (element.id && !element.id.startsWith('tab')) {
+                    if (element.type === 'checkbox') {
+                        if (element.id === 'timeSlots') {
+                            // Handle time slots specially
+                            if (!settings.timeSlots) settings.timeSlots = [];
+                            if (element.checked) settings.timeSlots.push(element.value);
+                        } else {
+                            settings[element.id] = element.checked;
+                        }
+                    } else if (element.type === 'color') {
+                        settings[element.id] = element.value;
+                    } else if (element.tagName === 'SELECT' && element.multiple) {
+                        settings[element.id] = Array.from(element.selectedOptions).map(opt => opt.value);
+                    } else {
+                        settings[element.id] = element.value;
+                    }
+                }
+            });
+            
+            // Add timestamp
+            settings.updatedAt = new Date().toISOString();
+            
+            try {
+                await setDoc(doc(db, 'settings', 'site'), settings, { merge: true });
+                alert('Settings saved successfully!');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('Error saving settings: ' + error.message);
+            }
+        };
+
+        // Reset to defaults
+        window.resetSettings = () => {
+            if (confirm('Reset all settings to default values?')) {
+                location.reload();
+            }
+        };
+
+        // Video opacity slider
+        document.getElementById('videoOpacity')?.addEventListener('input', (e) => {
+            document.getElementById('opacityValue').textContent = e.target.value;
+        });
+
+        // File upload handlers
+        document.getElementById('heroVideo')?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const storageRef = ref(storage, 'videos/hero-background.mp4');
+                await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(storageRef);
+                document.getElementById('heroVideoUrl').value = url;
+            }
+        });
+
+        document.getElementById('logoImage')?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const storageRef = ref(storage, 'images/logo.png');
+                await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(storageRef);
+                
+                // Preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('logoPreview').innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: contain;">`;
+                };
+                reader.readAsDataURL(file);
+                
+                // Save to settings
+                await setDoc(doc(db, 'settings', 'site'), { logoUrl: url }, { merge: true });
+            }
+        });
+
+        // Load settings on page load
+        loadSettings();
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>
